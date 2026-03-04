@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
@@ -30,12 +30,24 @@ const ACTIVE_ACTIVITIES = [
 export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
+  const [mouse, setMouse] = useState({ x: -999, y: -999 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
+
+  function handleMouseMove(e: React.MouseEvent) {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
+
+  function handleMouseLeave() {
+    setMouse({ x: -999, y: -999 });
+  }
 
   return (
     <>
@@ -53,15 +65,35 @@ export default function HomePage() {
         }
       `}</style>
 
-      <div style={{
-        minHeight: '100vh',
-        background: '#0a0a0f',
-        color: '#f0f0f0',
-        fontFamily: '"Inter", "Apple SD Gothic Neo", sans-serif',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'none' : 'translateY(12px)',
-        transition: 'opacity 0.4s ease, transform 0.4s ease',
-      }}>
+      <div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          minHeight: '100vh',
+          background: '#0a0a0f',
+          color: '#f0f0f0',
+          fontFamily: '"Inter", "Apple SD Gothic Neo", sans-serif',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'none' : 'translateY(12px)',
+          transition: 'opacity 0.4s ease, transform 0.4s ease',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* 마우스 스포트라이트 */}
+        <div style={{
+          position: 'absolute',
+          left: mouse.x - 200,
+          top: mouse.y - 200,
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(117,232,255,0.06) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          transition: 'left 0.08s ease, top 0.08s ease',
+          zIndex: 0,
+        }} />
 
         {/* ── 상단 헤더 ── */}
         <header style={{
@@ -101,7 +133,7 @@ export default function HomePage() {
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             marginBottom: '1.4rem',
-          }}>성남시청 AI 활용 동아리</div>
+          }}>AI 활용 동아리</div>
 
           {/* 메인 타이틀 */}
           <h1 style={{
@@ -136,7 +168,7 @@ export default function HomePage() {
               margin: 0,
               maxWidth: 480,
             }}>
-              성남시청 AI 활용 동아리 · 9가지 AI 도구 허브<br />
+              9가지 AI 도구 허브<br />
               GPT·Gemini 기반으로 업무를 스마트하게.
             </p>
             <div style={{
@@ -349,7 +381,7 @@ export default function HomePage() {
             fontSize: '0.72rem',
             color: '#333',
             letterSpacing: '0.06em',
-          }}>성남시청</span>
+          }}>AI Club</span>
         </footer>
 
       </div>
