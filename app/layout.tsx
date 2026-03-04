@@ -3,8 +3,8 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "GnuDaS GPT World",
-  description: "Deep Learning Crew - AI Tools Hub",
+  title: "AI Club · Deep Learning Crew",
+  description: "성남시청 AI 활용 동아리 · GPT·Gemini 기반 9가지 AI 도구 허브",
 };
 
 export default function RootLayout({
