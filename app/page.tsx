@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
@@ -30,24 +30,12 @@ const ACTIVE_ACTIVITIES = [
 export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
-  const [mouse, setMouse] = useState({ x: -999, y: -999 });
-  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
-
-  function handleMouseMove(e: React.MouseEvent) {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }
-
-  function handleMouseLeave() {
-    setMouse({ x: -999, y: -999 });
-  }
 
   return (
     <>
@@ -56,44 +44,29 @@ export default function HomePage() {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .tool-row {
-          transition: background 0.18s ease;
+        @keyframes scanline {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(100vh); }
         }
-        .tool-row:hover {
-          background: rgba(255,255,255,0.04) !important;
-          cursor: pointer;
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
         }
+        .tool-row { transition: background 0.15s ease; }
+        .tool-row:hover { background: rgba(255,255,255,0.04) !important; cursor: pointer; }
+        .tool-row:hover .tool-arrow { transform: translateX(4px); color: #75e8ff !important; }
+        .tool-arrow { transition: transform 0.15s ease, color 0.15s ease; }
       `}</style>
 
-      <div
-        ref={containerRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          minHeight: '100vh',
-          background: '#0a0a0f',
-          color: '#f0f0f0',
-          fontFamily: '"Inter", "Apple SD Gothic Neo", sans-serif',
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'none' : 'translateY(12px)',
-          transition: 'opacity 0.4s ease, transform 0.4s ease',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* 마우스 스포트라이트 */}
-        <div style={{
-          position: 'absolute',
-          left: mouse.x - 200,
-          top: mouse.y - 200,
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(117,232,255,0.06) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          transition: 'left 0.08s ease, top 0.08s ease',
-          zIndex: 0,
-        }} />
+      <div style={{
+        minHeight: '100vh',
+        background: '#0a0a0f',
+        color: '#f0f0f0',
+        fontFamily: '"Inter", "Apple SD Gothic Neo", sans-serif',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'none' : 'translateY(12px)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
+      }}>
 
         {/* ── 상단 헤더 ── */}
         <header style={{
@@ -125,16 +98,6 @@ export default function HomePage() {
           maxWidth: 960,
           margin: '0 auto',
         }}>
-          {/* 레이블 */}
-          <div style={{
-            fontFamily: 'monospace',
-            fontSize: '0.75rem',
-            color: '#888',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            marginBottom: '1.4rem',
-          }}>AI 활용 동아리</div>
-
           {/* 메인 타이틀 */}
           <h1 style={{
             fontSize: 'clamp(3.2rem, 8vw, 7.5rem)',
@@ -151,43 +114,36 @@ export default function HomePage() {
             letterSpacing: '-0.04em',
             margin: '0 0 2rem',
             color: '#75e8ff',
-          }}>Deep Learning Crew</h1>
-
-          {/* 서브텍스트 + 배지 행 */}
-          <div style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: '1rem',
+            alignItems: 'center',
+            gap: '0.1em',
           }}>
-            <p style={{
-              fontSize: 'clamp(0.95rem, 1.6vw, 1.1rem)',
-              color: '#888',
-              lineHeight: 1.65,
-              margin: 0,
-              maxWidth: 480,
-            }}>
-              9가지 AI 도구 허브<br />
-              GPT·Gemini 기반으로 업무를 스마트하게.
-            </p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              flexWrap: 'wrap',
-            }}>
-              {['회장 사진우', '총무 김동주'].map((b) => (
-                <span key={b} style={{
-                  fontFamily: 'monospace',
-                  fontSize: '0.78rem',
-                  color: '#888',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '0.3rem 0.7rem',
-                  borderRadius: 4,
-                  letterSpacing: '0.04em',
-                }}>{b}</span>
-              ))}
-            </div>
+            Deep Learning Crew
+            <span style={{
+              display: 'inline-block',
+              width: '0.06em',
+              height: '0.85em',
+              background: '#75e8ff',
+              marginLeft: '0.08em',
+              verticalAlign: 'middle',
+              animation: 'blink 1.1s step-end infinite',
+              borderRadius: 1,
+            }} />
+          </h1>
+
+          {/* 배지 행 */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {['회장 사진우', '총무 김동주'].map((b) => (
+              <span key={b} style={{
+                fontFamily: 'monospace',
+                fontSize: '0.78rem',
+                color: '#555',
+                border: '1px solid rgba(255,255,255,0.08)',
+                padding: '0.3rem 0.7rem',
+                borderRadius: 4,
+                letterSpacing: '0.04em',
+              }}>{b}</span>
+            ))}
           </div>
         </section>
 
@@ -266,12 +222,10 @@ export default function HomePage() {
                 </div>
 
                 {/* 화살표 */}
-                <span style={{
+                <span className="tool-arrow" style={{
                   fontFamily: 'monospace',
                   fontSize: '0.85rem',
-                  color: hoveredTool === i ? '#75e8ff' : '#333',
-                  transition: 'color 0.18s ease, transform 0.18s ease',
-                  transform: hoveredTool === i ? 'translateX(3px)' : 'translateX(0)',
+                  color: '#333',
                   display: 'inline-block',
                 }}>→</span>
               </div>
