@@ -22,8 +22,8 @@ export default function ChecklistPage() {
       formData.append('file', file);
       formData.append('teamLeader', teamLeader);
       formData.append('manager', manager);
-      const res = await fetch('/api/checklist', { method: 'POST', body: formData });
 
+      const res = await fetch('/api/checklist', { method: 'POST', body: formData });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || '생성 중 오류가 발생했습니다.');
@@ -42,71 +42,177 @@ export default function ChecklistPage() {
   }
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
+    <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <style>{`
-        .n-wrap { color:#e5e7eb; }
-        .n-hero { border:1px solid rgba(148,163,184,.25); background: linear-gradient(135deg,#171b28 0%, #0f1115 70%); border-radius:14px; padding:18px; margin-bottom:14px; }
-        .n-chip { display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(148,163,184,.35); color:#cbd5e1; font-size:.72rem; margin-right:6px; }
-        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:10px 0 8px; color:#f9fafb; }
-        .n-sub { color:#9ca3af; margin:0; line-height:1.7; }
-        .n-section { border:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg,#12151d,#101217); border-radius:12px; padding:20px; margin-bottom:14px; }
-        .n-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .n-label { display:block; font-size:.83rem; color:#9ca3af; margin-bottom:6px; }
-        .n-input { width:100%; border:1px solid rgba(255,255,255,.14); background:#0f1115; color:#f3f4f6; border-radius:8px; padding:.62rem .72rem; font-size:.93rem; }
-        .n-btn { margin-top:14px; border:1px solid rgba(255,255,255,.18); background:#f3f4f6; color:#111827; border-radius:8px; padding:.62rem .98rem; font-weight:600; cursor:pointer; }
-        .n-btn:disabled { opacity:.6; cursor:not-allowed; }
-        .n-muted { color:#9ca3af; font-size:.9rem; }
-        .n-err { margin-top:10px; background:rgba(127,29,29,.3); border:1px solid rgba(239,68,68,.4); color:#fca5a5; border-radius:8px; padding:.62rem .72rem; }
-        .n-ok { border-color:rgba(16,185,129,.4); }
-        .n-list { margin:0; padding-left:18px; color:#d1d5db; line-height:1.8; }
-        @media (max-width:780px){ .n-grid { grid-template-columns:1fr; } .n-h1{font-size:1.7rem;} }
+        .wrap { color:#e5e7eb; }
+        .hero {
+          padding: 6px 0 20px;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          margin-bottom: 18px;
+        }
+        .eyebrow {
+          font-size: .74rem;
+          color: #94a3b8;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        .title {
+          margin: 0;
+          font-size: clamp(1.65rem, 3vw, 2.35rem);
+          line-height: 1.18;
+          letter-spacing: -.022em;
+          color: #f8fafc;
+          font-weight: 760;
+        }
+        .sub {
+          margin: 12px 0 0;
+          color: #9ca3af;
+          line-height: 1.7;
+          font-size: .98rem;
+          max-width: 68ch;
+        }
+
+        .form {
+          display: grid;
+          gap: 14px;
+          margin-bottom: 18px;
+        }
+        .field {
+          display: grid;
+          gap: 6px;
+        }
+        .label {
+          font-size: .82rem;
+          color: #a1a1aa;
+          font-weight: 600;
+        }
+        .input {
+          width: 100%;
+          border: 0;
+          border-bottom: 1px solid rgba(148,163,184,.35);
+          background: transparent;
+          color: #f3f4f6;
+          padding: .66rem .1rem;
+          font-size: 1.02rem;
+          outline: none;
+          transition: border-color .15s ease;
+        }
+        .input:focus {
+          border-bottom-color: #818cf8;
+        }
+
+        .file-row {
+          padding-top: 8px;
+        }
+        .file-hint {
+          margin-top: 6px;
+          font-size: .82rem;
+          color: #71717a;
+        }
+
+        .actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 6px;
+        }
+        .btn {
+          border: none;
+          border-radius: 999px;
+          padding: .72rem 1.25rem;
+          font-weight: 700;
+          font-size: .95rem;
+          color: #fff;
+          background: linear-gradient(90deg, #6366f1, #8b5cf6);
+          box-shadow: 0 8px 20px rgba(99,102,241,.25);
+          cursor: pointer;
+        }
+        .btn:disabled { opacity:.62; cursor:not-allowed; }
+
+        .error {
+          margin-top: 6px;
+          font-size: .88rem;
+          color: #fca5a5;
+        }
+
+        .result {
+          margin-top: 10px;
+          padding-top: 14px;
+          border-top: 1px dashed rgba(255,255,255,.14);
+        }
+        .result p {
+          margin: 0 0 10px;
+          color: #d1fae5;
+        }
+        .download {
+          color: #c7d2fe;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        .notes {
+          margin-top: 18px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255,255,255,.08);
+        }
+        .notes-title {
+          margin: 0 0 8px;
+          color: #a1a1aa;
+          font-size: .85rem;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+        }
+        .notes ul {
+          margin: 0;
+          padding-left: 18px;
+          color: #9ca3af;
+          line-height: 1.75;
+          font-size: .94rem;
+        }
       `}</style>
 
-      <div className="n-wrap">
-        <section className="n-hero">
-          <span className="n-chip">Color Space</span>
-          <span className="n-chip">CSS Gradient</span>
-          <span className="n-chip">Shape Divider</span>
-          <h1 className="n-h1">도급위탁용역 점검표 생성기</h1>
-          <p className="n-sub">필요한 정보만 입력하면 점검표 ZIP을 바로 생성합니다. 복잡한 단계 없이 실무 중심으로 설계했습니다.</p>
+      <div className="wrap">
+        <section className="hero">
+          <div className="eyebrow">Checklist Workflow</div>
+          <h1 className="title">도급위탁용역 점검표 생성기</h1>
+          <p className="sub">필요한 정보만 입력하면 점검표 ZIP을 바로 생성합니다. 복잡한 화면 대신, 실무에서 바로 쓰기 좋게 단순하게 구성했습니다.</p>
         </section>
 
-        <section className="n-section">
-          <div className="n-grid">
-            <div>
-              <label className="n-label">팀장님 성함</label>
-              <input className="n-input" maxLength={10} value={teamLeader} onChange={(e) => setTeamLeader(e.target.value)} placeholder="예: 홍길동" />
-            </div>
-            <div>
-              <label className="n-label">과장님 성함</label>
-              <input className="n-input" maxLength={10} value={manager} onChange={(e) => setManager(e.target.value)} placeholder="예: 김영희" />
-            </div>
+        <section className="form">
+          <div className="field">
+            <label className="label">팀장님 성함</label>
+            <input className="input" maxLength={10} value={teamLeader} onChange={(e) => setTeamLeader(e.target.value)} placeholder="예: 홍길동" />
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <label className="n-label">엑셀 파일 업로드 (.xlsx)</label>
+          <div className="field">
+            <label className="label">과장님 성함</label>
+            <input className="input" maxLength={10} value={manager} onChange={(e) => setManager(e.target.value)} placeholder="예: 김영희" />
+          </div>
+
+          <div className="file-row">
+            <label className="label">엑셀 파일 업로드 (.xlsx)</label>
             <input type="file" accept=".xlsx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <div className="file-hint">점검표1/2/3 시트가 있는 파일을 업로드해 주세요.</div>
           </div>
 
-          {error && <div className="n-err">{error}</div>}
+          {error && <div className="error">{error}</div>}
 
-          <button className="n-btn" onClick={generate} disabled={loading}>
-            {loading ? '생성 중...' : '점검표 생성'}
-          </button>
+          <div className="actions">
+            <button className="btn" onClick={generate} disabled={loading}>{loading ? '생성 중...' : '점검표 생성'}</button>
+          </div>
+
+          {result && (
+            <div className="result">
+              <p><strong>{result.count}개</strong> 점검표 생성이 완료됐습니다.</p>
+              <a className="download" href={result.downloadUrl} download="점검표_결과.zip">ZIP 다운로드</a>
+            </div>
+          )}
         </section>
 
-        {result && (
-          <section className="n-section n-ok">
-            <p style={{ marginTop: 0 }}><strong>{result.count}개</strong> 점검표 생성이 완료됐습니다.</p>
-            <a className="n-btn" style={{ display: 'inline-block', textDecoration: 'none' }} href={result.downloadUrl} download="점검표_결과.zip">
-              ZIP 다운로드
-            </a>
-          </section>
-        )}
-
-        <section className="n-section">
-          <p className="n-muted" style={{ marginTop: 0, marginBottom: 8 }}>사용 전 확인 사항</p>
-          <ul className="n-list">
+        <section className="notes">
+          <p className="notes-title">사용 전 확인 사항</p>
+          <ul>
             <li>엑셀 파일에 <strong>점검표1, 점검표2, 점검표3</strong> 시트가 있어야 합니다.</li>
             <li>빨간색 폰트로 표시된 행의 데이터를 추출합니다.</li>
             <li>ODT 템플릿 파일이 서버에 미리 업로드되어 있어야 합니다.</li>
