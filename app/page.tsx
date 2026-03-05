@@ -132,18 +132,30 @@ export default function HomePage() {
           </h1>
 
           {/* 배지 행 */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {['회장 사진우', '총무 김동주'].map((b) => (
-              <span key={b} style={{
-                fontFamily: 'monospace',
-                fontSize: '0.78rem',
-                color: '#555',
-                border: '1px solid rgba(255,255,255,0.08)',
-                padding: '0.3rem 0.7rem',
-                borderRadius: 4,
-                letterSpacing: '0.04em',
-              }}>{b}</span>
-            ))}
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            {['회장 사진우', '총무 김동주'].map((b) => {
+              const isChair = b.includes('회장');
+              return (
+                <span key={b} style={{
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: isChair ? '#08101a' : '#0a0f1d',
+                  background: isChair
+                    ? 'linear-gradient(90deg,#75e8ff,#a7f3ff)'
+                    : 'linear-gradient(90deg,#c4b5fd,#ddd6fe)',
+                  border: isChair
+                    ? '1px solid rgba(117,232,255,0.55)'
+                    : '1px solid rgba(196,181,253,0.55)',
+                  padding: '0.34rem 0.8rem',
+                  borderRadius: 999,
+                  letterSpacing: '0.03em',
+                  boxShadow: isChair
+                    ? '0 0 0 1px rgba(117,232,255,0.2), 0 6px 18px rgba(117,232,255,0.35)'
+                    : '0 0 0 1px rgba(196,181,253,0.2), 0 6px 18px rgba(139,92,246,0.28)',
+                }}>{b}</span>
+              );
+            })}
           </div>
         </section>
 
