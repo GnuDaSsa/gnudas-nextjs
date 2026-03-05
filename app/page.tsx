@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import PixelOffice from '@/components/PixelOffice';
 
 const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '01', label: 'MBTI 검사기',          href: '/mbti',       desc: 'GPT 기반 성격 유형 분석' },
@@ -413,8 +412,6 @@ export default function HomePage() {
             <span>changed: {localWork?.changedCount ?? '-'}</span>
             <span>updated: {localWork ? new Date(localWork.updatedAt).toLocaleTimeString('ko-KR') : '-'}</span>
           </div>
-
-          <PixelOffice agents={localWork?.agentPipeline || []} />
 
           {localWork?.changedFiles?.length ? (
             <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#8ea5d6', lineHeight: 1.6 }}>
