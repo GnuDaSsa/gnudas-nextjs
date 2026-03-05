@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className="antialiased flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-4 pt-16 md:p-6 md:pt-6">
           {children}
         </main>
       </body>
