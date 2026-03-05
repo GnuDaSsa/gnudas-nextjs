@@ -45,9 +45,11 @@ export default function ChecklistPage() {
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
       <style>{`
         .n-wrap { color:#e5e7eb; }
-        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:0 0 8px; color:#f9fafb; }
-        .n-sub { color:#9ca3af; margin:0 0 24px; line-height:1.7; }
-        .n-section { border:1px solid rgba(255,255,255,.1); background:#111318; border-radius:12px; padding:20px; margin-bottom:14px; }
+        .n-hero { border:1px solid rgba(148,163,184,.25); background: linear-gradient(135deg,#171b28 0%, #0f1115 70%); border-radius:14px; padding:18px; margin-bottom:14px; }
+        .n-chip { display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(148,163,184,.35); color:#cbd5e1; font-size:.72rem; margin-right:6px; }
+        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:10px 0 8px; color:#f9fafb; }
+        .n-sub { color:#9ca3af; margin:0; line-height:1.7; }
+        .n-section { border:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg,#12151d,#101217); border-radius:12px; padding:20px; margin-bottom:14px; }
         .n-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
         .n-label { display:block; font-size:.83rem; color:#9ca3af; margin-bottom:6px; }
         .n-input { width:100%; border:1px solid rgba(255,255,255,.14); background:#0f1115; color:#f3f4f6; border-radius:8px; padding:.62rem .72rem; font-size:.93rem; }
@@ -61,8 +63,13 @@ export default function ChecklistPage() {
       `}</style>
 
       <div className="n-wrap">
-        <h1 className="n-h1">도급위탁용역 점검표 생성기</h1>
-        <p className="n-sub">필요한 정보만 입력하면 점검표 ZIP을 바로 생성합니다. 복잡한 단계 없이 실무 중심으로 설계했습니다.</p>
+        <section className="n-hero">
+          <span className="n-chip">Color Space</span>
+          <span className="n-chip">CSS Gradient</span>
+          <span className="n-chip">Shape Divider</span>
+          <h1 className="n-h1">도급위탁용역 점검표 생성기</h1>
+          <p className="n-sub">필요한 정보만 입력하면 점검표 ZIP을 바로 생성합니다. 복잡한 단계 없이 실무 중심으로 설계했습니다.</p>
+        </section>
 
         <section className="n-section">
           <div className="n-grid">

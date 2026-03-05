@@ -42,10 +42,12 @@ export default function PressPage() {
   return (
     <div style={{ maxWidth: 980, margin: '0 auto' }}>
       <style>{`
-        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:0 0 8px; color:#f9fafb; }
-        .n-sub { color:#9ca3af; margin:0 0 24px; line-height:1.7; }
+        .n-hero { border:1px solid rgba(148,163,184,.25); background: linear-gradient(135deg,#1a172a 0%, #0f1115 70%); border-radius:14px; padding:18px; margin-bottom:14px; }
+        .n-chip { display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(167,139,250,.45); color:#ddd6fe; font-size:.72rem; margin-right:6px; }
+        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:10px 0 8px; color:#f9fafb; }
+        .n-sub { color:#9ca3af; margin:0; line-height:1.7; }
         .n-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        .n-sec { border:1px solid rgba(255,255,255,.1); background:#111318; border-radius:12px; padding:20px; }
+        .n-sec { border:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg,#12151d,#101217); border-radius:12px; padding:20px; }
         .n-label { display:block; font-size:.83rem; color:#9ca3af; margin-bottom:6px; }
         .n-input { width:100%; border:1px solid rgba(255,255,255,.14); background:#0f1115; color:#f3f4f6; border-radius:8px; padding:.62rem .72rem; font-size:.93rem; }
         .n-three { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
@@ -55,8 +57,13 @@ export default function PressPage() {
         @media (max-width:900px){ .n-grid,.n-three{grid-template-columns:1fr;} .n-h1{font-size:1.7rem;} }
       `}</style>
 
-      <h1 className="n-h1">보도자료 생성기</h1>
-      <p className="n-sub">사실관계 중심 문장으로 초안을 생성합니다. 생성 후 수치와 고유명사를 한 번 더 확인해 배포하세요.</p>
+      <section className="n-hero">
+        <span className="n-chip">Haikei</span>
+        <span className="n-chip">Cool Backgrounds</span>
+        <span className="n-chip">Awwwards</span>
+        <h1 className="n-h1">보도자료 생성기</h1>
+        <p className="n-sub">사실관계 중심 문장으로 초안을 생성합니다. 생성 후 수치와 고유명사를 한 번 더 확인해 배포하세요.</p>
+      </section>
 
       <div className="n-grid">
         <section className="n-sec">

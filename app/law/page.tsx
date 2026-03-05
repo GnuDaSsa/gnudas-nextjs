@@ -30,9 +30,11 @@ export default function LawPage() {
   return (
     <div style={{ maxWidth: 980, margin: '0 auto' }}>
       <style>{`
-        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:0 0 8px; color:#f9fafb; }
-        .n-sub { color:#9ca3af; margin:0 0 20px; line-height:1.7; }
-        .n-sec { border:1px solid rgba(255,255,255,.1); background:#111318; border-radius:12px; padding:20px; margin-bottom:14px; }
+        .n-hero { border:1px solid rgba(148,163,184,.25); background: linear-gradient(135deg,#152032 0%, #0f1115 70%); border-radius:14px; padding:18px; margin-bottom:14px; }
+        .n-chip { display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(125,211,252,.45); color:#bae6fd; font-size:.72rem; margin-right:6px; }
+        .n-h1 { font-size:2.1rem; font-weight:700; letter-spacing:-.02em; margin:10px 0 8px; color:#f9fafb; }
+        .n-sub { color:#9ca3af; margin:0; line-height:1.7; }
+        .n-sec { border:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg,#12151d,#101217); border-radius:12px; padding:20px; margin-bottom:14px; }
         .n-search { display:grid; grid-template-columns:1fr auto; gap:8px; }
         .n-input { width:100%; border:1px solid rgba(255,255,255,.14); background:#0f1115; color:#f3f4f6; border-radius:8px; padding:.66rem .74rem; font-size:.93rem; }
         .n-btn { border:1px solid rgba(255,255,255,.18); background:#f3f4f6; color:#111827; border-radius:8px; padding:.62rem .98rem; font-weight:600; cursor:pointer; }
@@ -44,8 +46,13 @@ export default function LawPage() {
         @media (max-width:900px){ .n-search,.n-grid{grid-template-columns:1fr;} .n-h1{font-size:1.7rem;} }
       `}</style>
 
-      <h1 className="n-h1">AI 법률 검색</h1>
-      <p className="n-sub">법령/판례를 검색해 핵심 쟁점을 빠르게 확인합니다. 결과는 참고용이며 실제 판단 전 원문 확인이 필요합니다.</p>
+      <section className="n-hero">
+        <span className="n-chip">Dribbble</span>
+        <span className="n-chip">Evidence First</span>
+        <span className="n-chip">Minimal UI</span>
+        <h1 className="n-h1">AI 법률 검색</h1>
+        <p className="n-sub">법령/판례를 검색해 핵심 쟁점을 빠르게 확인합니다. 결과는 참고용이며 실제 판단 전 원문 확인이 필요합니다.</p>
+      </section>
 
       <section className="n-sec">
         <div className="n-search">
