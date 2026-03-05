@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PixelOffice from '@/components/PixelOffice';
 
@@ -37,10 +37,17 @@ type LocalWork = {
   agentPipeline: { name: string; state: string; detail: string }[];
 };
 
+function isCodingProcess(line: string) {
+  const v = line.toLowerCase();
+  return v.includes('openclaw') || v.includes('codex') || v.includes('claude');
+}
+
 export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
   const [localWork, setLocalWork] = useState<LocalWork | null>(null);
+  const [showCodingPopup, setShowCodingPopup] = useState(false);
+  const wasCodingRef = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,7 +62,14 @@ export default function HomePage() {
       try {
         const res = await fetch('/api/local-work', { cache: 'no-store' });
         const data = await res.json();
-        if (mounted) setLocalWork(data);
+        if (mounted) {
+          const codingNow = (data?.codingProcesses || []).some(isCodingProcess);
+          if (codingNow && !wasCodingRef.current) {
+            setShowCodingPopup(true);
+          }
+          wasCodingRef.current = codingNow;
+          setLocalWork(data);
+        }
       } catch {
         // ignore
       }
@@ -99,6 +113,18 @@ export default function HomePage() {
         transform: visible ? 'none' : 'translateY(12px)',
         transition: 'opacity 0.4s ease, transform 0.4s ease',
       }}>
+        {showCodingPopup && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <div style={{ width: 'min(520px, 92vw)', borderRadius: 14, border: '1px solid rgba(117,232,255,0.4)', background: 'linear-gradient(180deg,#0d1430,#0a1025)', boxShadow: '0 10px 40px rgba(0,0,0,0.45)', padding: '1rem 1.1rem' }}>
+              <div style={{ fontFamily: 'monospace', fontSize: 12, color: '#75e8ff', marginBottom: 6 }}>LIVE CODING DETECTED</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>OpenClaw 코딩 작업 시작됨 🔥</div>
+              <div style={{ fontSize: 13, color: '#9fb4e7', marginBottom: 12 }}>
+                에이전트들이 탕비실에서 사무실로 이동해서 일하는 중이야.
+              </div>
+              <button onClick={() => setShowCodingPopup(false)} style={{ background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)', border: 'none', color: '#fff', borderRadius: 8, padding: '0.5rem 0.85rem', fontWeight: 800, cursor: 'pointer' }}>확인</button>
+            </div>
+          </div>
+        )}
 
         {/* ── 상단 헤더 ── */}
         <header style={{
