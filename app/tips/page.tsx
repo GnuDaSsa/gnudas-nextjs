@@ -22,6 +22,9 @@ export default function TipsPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('전체');
   const [sort, setSort] = useState<'latest' | 'popular'>('latest');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [adminPw, setAdminPw] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => { fetchTips(); }, [categoryFilter, sort]);
 
@@ -56,8 +59,36 @@ export default function TipsPage() {
     fetchTips();
   }
 
+  async function deleteTip() {
+    if (!deleteTarget) return;
+    const res = await fetch(`/api/tips/${deleteTarget}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setDeleteError(data.error || '삭제 실패'); return; }
+    setDeleteTarget(null);
+    setAdminPw('');
+    setDeleteError('');
+    fetchTips();
+  }
+
   return (
     <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+          <div style={{ background: '#0d1538', border: '1px solid #2b3f7a', borderRadius: 12, padding: 24, minWidth: 300 }}>
+            <div style={{ fontWeight: 700, marginBottom: 12, color: '#f3f7ff' }}>관리자 비밀번호 입력</div>
+            <input type="password" placeholder="비밀번호" value={adminPw} onChange={(e) => setAdminPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && deleteTip()} style={{ width: '100%', marginBottom: 8, background: '#06091f', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} autoFocus />
+            {deleteError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 8 }}>{deleteError}</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={deleteTip} style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem' }}>삭제</button>
+              <button onClick={() => { setDeleteTarget(null); setAdminPw(''); setDeleteError(''); }} style={{ flex: 1, background: '#1e2f6a', color: '#dbe8ff', border: 'none', borderRadius: 8, padding: '0.55rem' }}>취소</button>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 style={{ fontSize: '1.7rem', fontWeight: 900 }}>💡 꿀팁 공유 게시판</h1>
       <p style={{ color: '#aab7d6', marginBottom: 16 }}>검색/정렬/카테고리로 글을 탐색하고 좋아요 반응을 남겨보세요.</p>
 
@@ -100,6 +131,7 @@ export default function TipsPage() {
             <span>작성자 {tip.author}</span>
             <span>조회 {(tip.views || 0)}</span>
             <button onClick={(e) => { e.stopPropagation(); likeTip(tip._id); }} style={{ marginLeft: 'auto', background: 'rgba(255,119,230,0.14)', border: '1px solid rgba(255,119,230,0.35)', color: '#ff77e6', borderRadius: 8, padding: '0.25rem 0.6rem' }}>❤️ {tip.likes || 0}</button>
+            <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(tip._id); setDeleteError(''); }} style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#ef4444', borderRadius: 8, padding: '0.25rem 0.6rem', fontSize: 13 }}>삭제</button>
           </div>
         </div>
       ))}

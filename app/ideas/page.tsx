@@ -28,6 +28,9 @@ export default function IdeasPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
   const [sort, setSort] = useState<'latest' | 'popular'>('latest');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [adminPw, setAdminPw] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => { fetchIdeas(); }, [statusFilter, sort]);
 
@@ -58,8 +61,36 @@ export default function IdeasPage() {
     fetchIdeas();
   }
 
+  async function deleteIdea() {
+    if (!deleteTarget) return;
+    const res = await fetch(`/api/ideas/${deleteTarget}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setDeleteError(data.error || '삭제 실패'); return; }
+    setDeleteTarget(null);
+    setAdminPw('');
+    setDeleteError('');
+    fetchIdeas();
+  }
+
   return (
     <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+          <div style={{ background: '#0d1538', border: '1px solid #2b3f7a', borderRadius: 12, padding: 24, minWidth: 300 }}>
+            <div style={{ fontWeight: 700, marginBottom: 12, color: '#f3f7ff' }}>관리자 비밀번호 입력</div>
+            <input type="password" placeholder="비밀번호" value={adminPw} onChange={(e) => setAdminPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && deleteIdea()} style={{ width: '100%', marginBottom: 8, background: '#06091f', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} autoFocus />
+            {deleteError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 8 }}>{deleteError}</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={deleteIdea} style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem' }}>삭제</button>
+              <button onClick={() => { setDeleteTarget(null); setAdminPw(''); setDeleteError(''); }} style={{ flex: 1, background: '#1e2f6a', color: '#dbe8ff', border: 'none', borderRadius: 8, padding: '0.55rem' }}>취소</button>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 style={{ fontSize: '1.7rem', fontWeight: 900 }}>🧠 아이디어 제안소</h1>
       <p style={{ color: '#aab7d6', marginBottom: 16 }}>일반 게시판처럼 상태/인기 기반으로 아이디어를 관리합니다.</p>
 
@@ -99,6 +130,7 @@ export default function IdeasPage() {
             <span>제안자 {idea.nickname}</span>
             <span>댓글 {(idea.comments || 0)}</span>
             <button onClick={() => vote(idea._id)} style={{ marginLeft: 'auto', background: 'rgba(117,232,255,0.14)', border: '1px solid rgba(117,232,255,0.35)', color: '#75e8ff', borderRadius: 8, padding: '0.25rem 0.6rem' }}>⬆ {(idea.votes || 0)}</button>
+            <button onClick={() => { setDeleteTarget(idea._id); setDeleteError(''); }} style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#ef4444', borderRadius: 8, padding: '0.25rem 0.6rem', fontSize: 13 }}>삭제</button>
           </div>
         </div>
       ))}
