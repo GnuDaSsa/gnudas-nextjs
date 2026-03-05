@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PixelOffice from '@/components/PixelOffice';
 
 const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '01', label: 'MBTI 검사기',          href: '/mbti',       desc: 'GPT 기반 성격 유형 분석' },
@@ -387,20 +388,7 @@ export default function HomePage() {
             <span>updated: {localWork ? new Date(localWork.updatedAt).toLocaleTimeString('ko-KR') : '-'}</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
-            {(localWork?.agentPipeline || []).map((agent) => (
-              <div key={agent.name} style={{
-                border: '1px solid rgba(117,232,255,0.22)',
-                borderRadius: 10,
-                padding: '0.75rem 0.85rem',
-                background: 'rgba(10,18,38,0.55)',
-              }}>
-                <div style={{ fontSize: '0.8rem', color: '#dbe8ff', fontWeight: 700 }}>{agent.name}</div>
-                <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#75e8ff', marginTop: 6 }}>{agent.state}</div>
-                <div style={{ fontSize: '0.78rem', color: '#7f93bd', marginTop: 6 }}>{agent.detail}</div>
-              </div>
-            ))}
-          </div>
+          <PixelOffice agents={localWork?.agentPipeline || []} />
 
           {localWork?.changedFiles?.length ? (
             <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#8ea5d6', lineHeight: 1.6 }}>
