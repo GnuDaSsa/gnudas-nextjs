@@ -26,14 +26,46 @@ const ACTIVE_ACTIVITIES = [
   '이번 분기 목표: 나만의 AI 콘텐츠 만들기',
 ];
 
+type LocalWork = {
+  branch: string;
+  changedCount: number;
+  changedFiles: string[];
+  lastCommit: string;
+  codingProcesses: string[];
+  updatedAt: string;
+  agentPipeline: { name: string; state: string; detail: string }[];
+};
+
 export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
+  const [localWork, setLocalWork] = useState<LocalWork | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const tick = async () => {
+      try {
+        const res = await fetch('/api/local-work', { cache: 'no-store' });
+        const data = await res.json();
+        if (mounted) setLocalWork(data);
+      } catch {
+        // ignore
+      }
+    };
+
+    tick();
+    const timer = setInterval(tick, 3000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
   }, []);
 
   return (
@@ -340,13 +372,23 @@ export default function HomePage() {
             textTransform: 'uppercase',
             margin: '1.2rem 0 0.9rem',
           }}>Agent Pipeline</div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 10,
+            marginBottom: 10,
+            flexWrap: 'wrap',
+            fontFamily: 'monospace',
+            fontSize: '0.72rem',
+            color: '#86a1d8',
+          }}>
+            <span>branch: {localWork?.branch || 'loading...'}</span>
+            <span>changed: {localWork?.changedCount ?? '-'}</span>
+            <span>updated: {localWork ? new Date(localWork.updatedAt).toLocaleTimeString('ko-KR') : '-'}</span>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
-            {[
-              { name: 'Planner Agent', state: 'RUNNING', detail: '요구사항 분석' },
-              { name: 'Design Agent', state: 'DONE', detail: 'UI 스케치 반영' },
-              { name: 'Coding Agent', state: 'RUNNING', detail: '기능 개발/수정' },
-              { name: 'QA Agent', state: 'QUEUED', detail: '검증 대기' },
-            ].map((agent) => (
+            {(localWork?.agentPipeline || []).map((agent) => (
               <div key={agent.name} style={{
                 border: '1px solid rgba(117,232,255,0.22)',
                 borderRadius: 10,
@@ -359,6 +401,15 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          {localWork?.changedFiles?.length ? (
+            <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#8ea5d6', lineHeight: 1.6 }}>
+              <div style={{ fontFamily: 'monospace', marginBottom: 4, color: '#b6c7ea' }}>local changed files</div>
+              {localWork.changedFiles.map((f) => (
+                <div key={f}>• {f}</div>
+              ))}
+            </div>
+          ) : null}
         </section>
 
         {/* ── 푸터 ── */}
