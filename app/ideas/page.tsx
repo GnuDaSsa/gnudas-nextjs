@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Idea {
   _id: string;
@@ -7,15 +7,17 @@ interface Idea {
   content: string;
   nickname: string;
   status: string;
+  votes?: number;
+  comments?: number;
   createdAt: string;
 }
 
-const STATUSES = ['제안됨', '검토중', '채택', '보류'];
+const STATUSES = ['전체', '제안됨', '검토중', '채택', '보류'];
 const STATUS_COLORS: Record<string, string> = {
-  '제안됨': '#75e8ff',
-  '검토중': '#f59e0b',
-  '채택': '#34d399',
-  '보류': '#ef4444',
+  제안됨: '#75e8ff',
+  검토중: '#f59e0b',
+  채택: '#34d399',
+  보류: '#ef4444',
 };
 
 export default function IdeasPage() {
@@ -23,25 +25,26 @@ export default function IdeasPage() {
   const [form, setForm] = useState({ title: '', content: '', nickname: '' });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('전체');
+  const [sort, setSort] = useState<'latest' | 'popular'>('latest');
 
-  useEffect(() => { fetchIdeas(); }, []);
+  useEffect(() => { fetchIdeas(); }, [statusFilter, sort]);
 
   async function fetchIdeas() {
-    const res = await fetch('/api/ideas');
+    const params = new URLSearchParams({ status: statusFilter, sort });
+    if (search.trim()) params.set('search', search.trim());
+    const res = await fetch(`/api/ideas?${params.toString()}`);
     const data = await res.json();
     setIdeas(data.ideas || []);
   }
 
   async function submitIdea() {
-    if (!form.title || !form.content || !form.nickname) { alert('모든 필드를 입력해주세요.'); return; }
-    if (form.content.length < 10) { alert('내용을 10자 이상 입력해주세요.'); return; }
+    if (!form.title || !form.content || !form.nickname) return alert('모든 필드를 입력해주세요.');
+    if (form.content.length < 10) return alert('내용을 10자 이상 입력해주세요.');
     setLoading(true);
     try {
-      await fetch('/api/ideas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+      await fetch('/api/ideas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       setForm({ title: '', content: '', nickname: '' });
       setShowForm(false);
       fetchIdeas();
@@ -50,99 +53,55 @@ export default function IdeasPage() {
     }
   }
 
-  const cardStyle = {
-    borderRadius: 14,
-    border: '1px solid rgba(125,187,255,0.3)',
-    background: 'rgba(8,10,34,0.6)',
-    padding: '1.2rem',
-    marginBottom: '0.8rem',
-  };
-  const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(125,187,255,0.3)',
-    borderRadius: 8,
-    color: '#eef4ff',
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.95rem',
-    outline: 'none',
-    marginTop: 4,
-  };
-  const labelStyle = { fontSize: '0.85rem', fontWeight: 700, color: '#8db9ff', display: 'block', marginBottom: 2 };
-  const btnStyle = {
-    background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)',
-    color: '#fff', fontWeight: 800, border: 'none',
-    borderRadius: 10, padding: '0.55rem 1.2rem',
-    cursor: 'pointer', fontSize: '0.9rem',
-  };
+  async function vote(id: string) {
+    await fetch(`/api/ideas/${id}/vote`, { method: 'POST' });
+    fetchIdeas();
+  }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0 }}>💡 아이디어 제안소</h1>
-          <p style={{ color: '#d5def3', fontSize: '0.9rem', margin: '0.3rem 0 0' }}>클럽 활동에 대한 아이디어를 자유롭게 제안해주세요.</p>
-        </div>
-        <button style={btnStyle} onClick={() => setShowForm(!showForm)}>
-          {showForm ? '닫기' : '+ 아이디어 제안'}
-        </button>
+    <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      <h1 style={{ fontSize: '1.7rem', fontWeight: 900 }}>🧠 아이디어 제안소</h1>
+      <p style={{ color: '#aab7d6', marginBottom: 16 }}>일반 게시판처럼 상태/인기 기반으로 아이디어를 관리합니다.</p>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="제목/내용/작성자 검색" style={{ flex: 1, minWidth: 220, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+        <button onClick={fetchIdeas} style={{ padding: '0.55rem 0.9rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>검색</button>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: '0.55rem 0.75rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>
+          {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as 'latest' | 'popular')} style={{ padding: '0.55rem 0.75rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>
+          <option value="latest">최신순</option>
+          <option value="popular">인기순</option>
+        </select>
+        <button onClick={() => setShowForm((v) => !v)} style={{ background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem 0.9rem', fontWeight: 800 }}>{showForm ? '닫기' : '글쓰기'}</button>
       </div>
 
       {showForm && (
-        <div style={{ ...cardStyle, border: '1px solid rgba(117,232,255,0.4)' }}>
-          <h3 style={{ margin: '0 0 1rem', color: '#75e8ff', fontWeight: 800 }}>아이디어 제안</h3>
-          <div>
-            <label style={labelStyle}>제목 (최대 100자)</label>
-            <input style={inputStyle} placeholder="아이디어 제목" maxLength={100} value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} />
+        <div style={{ border: '1px solid #2d4484', borderRadius: 12, padding: 14, marginBottom: 14, background: 'rgba(10,20,54,0.65)' }}>
+          <input placeholder="제목" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} style={{ width: '100%', marginBottom: 8, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+          <textarea placeholder="내용" value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} style={{ width: '100%', minHeight: 100, marginBottom: 8, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
+            <input placeholder="닉네임" value={form.nickname} onChange={(e) => setForm((f) => ({ ...f, nickname: e.target.value }))} style={{ background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+            <button onClick={submitIdea} disabled={loading} style={{ background: '#24409b', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem 0.75rem' }}>{loading ? '등록 중' : '등록'}</button>
           </div>
-          <div style={{ marginTop: 8 }}>
-            <label style={labelStyle}>닉네임 (최대 30자)</label>
-            <input style={inputStyle} placeholder="닉네임" maxLength={30} value={form.nickname} onChange={e => setForm(f => ({...f, nickname: e.target.value}))} />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <label style={labelStyle}>내용 (10~500자)</label>
-            <textarea
-              style={{ ...inputStyle, height: 100, resize: 'vertical' }}
-              placeholder="아이디어를 자세히 설명해주세요..."
-              maxLength={500}
-              value={form.content}
-              onChange={e => setForm(f => ({...f, content: e.target.value}))}
-            />
-            <div style={{ color: '#4a5f8a', fontSize: '0.78rem', textAlign: 'right', marginTop: 2 }}>{form.content.length}/500</div>
-          </div>
-          <button style={{ ...btnStyle, marginTop: 12, opacity: loading ? 0.7 : 1 }} onClick={submitIdea} disabled={loading}>
-            {loading ? '등록 중...' : '등록하기'}
-          </button>
         </div>
       )}
 
-      {ideas.length === 0 ? (
-        <div style={{ ...cardStyle, textAlign: 'center', color: '#8db9ff', padding: '2rem' }}>
-          아직 등록된 아이디어가 없습니다. 첫 번째 아이디어를 제안해보세요!
-        </div>
-      ) : (
-        ideas.map(idea => (
-          <div key={idea._id} style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{
-                    padding: '0.2rem 0.6rem', borderRadius: 999,
-                    background: `${STATUS_COLORS[idea.status]}22`,
-                    border: `1px solid ${STATUS_COLORS[idea.status]}66`,
-                    color: STATUS_COLORS[idea.status],
-                    fontSize: '0.78rem', fontWeight: 700,
-                  }}>{idea.status}</span>
-                  <span style={{ color: '#8db9ff', fontSize: '0.8rem' }}>{idea.nickname}</span>
-                  <span style={{ color: '#4a5f8a', fontSize: '0.78rem' }}>{new Date(idea.createdAt).toLocaleDateString('ko-KR')}</span>
-                </div>
-                <h3 style={{ margin: '0 0 6px', color: '#f3f7ff', fontWeight: 800, fontSize: '1.05rem' }}>{idea.title}</h3>
-                <p style={{ margin: 0, color: '#d5def3', fontSize: '0.9rem', lineHeight: 1.6 }}>{idea.content}</p>
-              </div>
-            </div>
+      {ideas.map((idea) => (
+        <div key={idea._id} style={{ border: '1px solid #253a7b', borderRadius: 12, padding: 14, marginBottom: 10, background: 'rgba(9,16,42,0.55)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <h3 style={{ margin: 0, color: '#f3f7ff' }}>{idea.title}</h3>
+            <span style={{ fontSize: 12, color: '#8fb2ff' }}>{new Date(idea.createdAt).toLocaleDateString('ko-KR')}</span>
           </div>
-        ))
-      )}
+          <div style={{ marginTop: 6, color: '#d6e2ff', lineHeight: 1.6 }}>{idea.content}</div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 8, fontSize: 13, color: '#9fb4e7' }}>
+            <span style={{ color: STATUS_COLORS[idea.status] || '#9fb4e7' }}>● {idea.status}</span>
+            <span>제안자 {idea.nickname}</span>
+            <span>댓글 {(idea.comments || 0)}</span>
+            <button onClick={() => vote(idea._id)} style={{ marginLeft: 'auto', background: 'rgba(117,232,255,0.14)', border: '1px solid rgba(117,232,255,0.35)', color: '#75e8ff', borderRadius: 8, padding: '0.25rem 0.6rem' }}>⬆ {(idea.votes || 0)}</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

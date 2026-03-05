@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Tip {
   _id: string;
@@ -7,36 +7,37 @@ interface Tip {
   content: string;
   author: string;
   category: string;
-  imageUrl?: string;
   likes: number;
+  views?: number;
   createdAt: string;
 }
+
+const CATEGORIES = ['전체', 'ChatGPT', 'Gemini', 'Claude', 'Midjourney', 'DALL-E', '기타'];
 
 export default function TipsPage() {
   const [tips, setTips] = useState<Tip[]>([]);
   const [form, setForm] = useState({ title: '', content: '', author: '', category: 'ChatGPT' });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('전체');
+  const [sort, setSort] = useState<'latest' | 'popular'>('latest');
 
-  const CATEGORIES = ['ChatGPT', 'Gemini', 'Claude', 'Midjourney', 'DALL-E', '기타'];
-
-  useEffect(() => { fetchTips(); }, []);
+  useEffect(() => { fetchTips(); }, [categoryFilter, sort]);
 
   async function fetchTips() {
-    const res = await fetch('/api/tips');
+    const params = new URLSearchParams({ sort, category: categoryFilter });
+    if (search.trim()) params.set('search', search.trim());
+    const res = await fetch(`/api/tips?${params.toString()}`);
     const data = await res.json();
     setTips(data.tips || []);
   }
 
   async function submitTip() {
-    if (!form.title || !form.content || !form.author) { alert('모든 필드를 입력해주세요.'); return; }
+    if (!form.title || !form.content || !form.author) return alert('모든 필드를 입력해주세요.');
     setLoading(true);
     try {
-      await fetch('/api/tips', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+      await fetch('/api/tips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       setForm({ title: '', content: '', author: '', category: 'ChatGPT' });
       setShowForm(false);
       fetchTips();
@@ -50,100 +51,58 @@ export default function TipsPage() {
     fetchTips();
   }
 
-  const cardStyle = {
-    borderRadius: 14,
-    border: '1px solid rgba(125,187,255,0.3)',
-    background: 'rgba(8,10,34,0.6)',
-    padding: '1.2rem',
-    marginBottom: '0.8rem',
-  };
-  const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(125,187,255,0.3)',
-    borderRadius: 8,
-    color: '#eef4ff',
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.95rem',
-    outline: 'none',
-    marginTop: 4,
-  };
-  const labelStyle = { fontSize: '0.85rem', fontWeight: 700, color: '#8db9ff', display: 'block', marginBottom: 2 };
-  const btnStyle = {
-    background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)',
-    color: '#fff', fontWeight: 800, border: 'none',
-    borderRadius: 10, padding: '0.55rem 1.2rem',
-    cursor: 'pointer', fontSize: '0.9rem',
-  };
+  async function viewTip(id: string) {
+    await fetch(`/api/tips/${id}/view`, { method: 'POST' });
+    fetchTips();
+  }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0 }}>💡 AI 꿀팁 공유</h1>
-          <p style={{ color: '#d5def3', fontSize: '0.9rem', margin: '0.3rem 0 0' }}>AI 활용 꿀팁을 공유해보세요!</p>
-        </div>
-        <button style={btnStyle} onClick={() => setShowForm(!showForm)}>
-          {showForm ? '닫기' : '+ 꿀팁 등록'}
-        </button>
+    <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      <h1 style={{ fontSize: '1.7rem', fontWeight: 900 }}>💡 꿀팁 공유 게시판</h1>
+      <p style={{ color: '#aab7d6', marginBottom: 16 }}>검색/정렬/카테고리로 글을 탐색하고 좋아요 반응을 남겨보세요.</p>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="제목/내용/작성자 검색" style={{ flex: 1, minWidth: 220, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+        <button onClick={fetchTips} style={{ padding: '0.55rem 0.9rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>검색</button>
+        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ padding: '0.55rem 0.75rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as 'latest' | 'popular')} style={{ padding: '0.55rem 0.75rem', borderRadius: 8, border: '1px solid #3f58a2', background: '#15214f', color: '#dbe8ff' }}>
+          <option value="latest">최신순</option>
+          <option value="popular">인기순</option>
+        </select>
+        <button onClick={() => setShowForm((v) => !v)} style={{ background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem 0.9rem', fontWeight: 800 }}>{showForm ? '닫기' : '글쓰기'}</button>
       </div>
 
       {showForm && (
-        <div style={{ ...cardStyle, border: '1px solid rgba(117,232,255,0.4)' }}>
-          <h3 style={{ margin: '0 0 1rem', color: '#75e8ff', fontWeight: 800 }}>꿀팁 등록</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>제목</label>
-              <input style={inputStyle} placeholder="꿀팁 제목" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} />
-            </div>
-            <div>
-              <label style={labelStyle}>카테고리</label>
-              <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.category} onChange={e => setForm(f => ({...f, category: e.target.value}))}>
-                {CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#0c1242' }}>{c}</option>)}
-              </select>
-            </div>
+        <div style={{ border: '1px solid #2d4484', borderRadius: 12, padding: 14, marginBottom: 14, background: 'rgba(10,20,54,0.65)' }}>
+          <input placeholder="제목" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} style={{ width: '100%', marginBottom: 8, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+          <textarea placeholder="내용" value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} style={{ width: '100%', minHeight: 100, marginBottom: 8, background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <input placeholder="작성자" value={form.author} onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))} style={{ background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }} />
+            <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} style={{ background: '#0d1538', color: '#eaf1ff', border: '1px solid #2b3f7a', borderRadius: 8, padding: '0.55rem 0.75rem' }}>
+              {CATEGORIES.filter((c) => c !== '전체').map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button onClick={submitTip} disabled={loading} style={{ background: '#24409b', color: '#fff', border: 'none', borderRadius: 8, padding: '0.55rem 0.75rem' }}>{loading ? '등록 중' : '등록'}</button>
           </div>
-          <div style={{ marginTop: 8 }}>
-            <label style={labelStyle}>작성자</label>
-            <input style={inputStyle} placeholder="닉네임" value={form.author} onChange={e => setForm(f => ({...f, author: e.target.value}))} />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <label style={labelStyle}>내용</label>
-            <textarea style={{ ...inputStyle, height: 100, resize: 'vertical' }} placeholder="꿀팁 내용을 작성하세요..." value={form.content} onChange={e => setForm(f => ({...f, content: e.target.value}))} />
-          </div>
-          <button style={{ ...btnStyle, marginTop: 12, opacity: loading ? 0.7 : 1 }} onClick={submitTip} disabled={loading}>
-            {loading ? '등록 중...' : '등록하기'}
-          </button>
         </div>
       )}
 
-      {tips.length === 0 ? (
-        <div style={{ ...cardStyle, textAlign: 'center', color: '#8db9ff', padding: '2rem' }}>
-          아직 등록된 꿀팁이 없습니다. 첫 번째 꿀팁을 등록해보세요!
-        </div>
-      ) : (
-        tips.map(tip => (
-          <div key={tip._id} style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ padding: '0.2rem 0.6rem', borderRadius: 999, background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', color: '#75e8ff', fontSize: '0.78rem', fontWeight: 700 }}>{tip.category}</span>
-                  <span style={{ color: '#8db9ff', fontSize: '0.8rem' }}>{tip.author}</span>
-                  <span style={{ color: '#4a5f8a', fontSize: '0.78rem' }}>{new Date(tip.createdAt).toLocaleDateString('ko-KR')}</span>
-                </div>
-                <h3 style={{ margin: '0 0 6px', color: '#f3f7ff', fontWeight: 800, fontSize: '1.05rem' }}>{tip.title}</h3>
-                <p style={{ margin: 0, color: '#d5def3', fontSize: '0.9rem', lineHeight: 1.6 }}>{tip.content}</p>
-              </div>
-              <button
-                onClick={() => likeTip(tip._id)}
-                style={{ marginLeft: 12, background: 'rgba(255,119,230,0.12)', border: '1px solid rgba(255,119,230,0.3)', borderRadius: 10, color: '#ff77e6', padding: '0.4rem 0.8rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0 }}
-              >
-                ❤️ {tip.likes || 0}
-              </button>
-            </div>
+      {tips.map((tip) => (
+        <div key={tip._id} onClick={() => viewTip(tip._id)} style={{ border: '1px solid #253a7b', borderRadius: 12, padding: 14, marginBottom: 10, background: 'rgba(9,16,42,0.55)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <h3 style={{ margin: 0, color: '#f3f7ff' }}>{tip.title}</h3>
+            <span style={{ fontSize: 12, color: '#8fb2ff' }}>{new Date(tip.createdAt).toLocaleDateString('ko-KR')}</span>
           </div>
-        ))
-      )}
+          <div style={{ marginTop: 6, color: '#d6e2ff', lineHeight: 1.6 }}>{tip.content}</div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 8, fontSize: 13, color: '#9fb4e7' }}>
+            <span>#{tip.category}</span>
+            <span>작성자 {tip.author}</span>
+            <span>조회 {(tip.views || 0)}</span>
+            <button onClick={(e) => { e.stopPropagation(); likeTip(tip._id); }} style={{ marginLeft: 'auto', background: 'rgba(255,119,230,0.14)', border: '1px solid rgba(255,119,230,0.35)', color: '#ff77e6', borderRadius: 8, padding: '0.25rem 0.6rem' }}>❤️ {tip.likes || 0}</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

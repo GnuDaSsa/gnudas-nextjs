@@ -23,11 +23,28 @@ Be specific and detailed. Return ONLY valid JSON.`;
 
     const text = response.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return NextResponse.json(parsed);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { positive: text, negative: '' };
+
+    let image: { mimeType: string; imageBytes: string } | null = null;
+    try {
+      const imageRes = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: parsed.positive,
+        config: {
+          numberOfImages: 1,
+          aspectRatio,
+        },
+      });
+      image = imageRes?.generatedImages?.[0]?.image || null;
+    } catch {
+      image = null;
     }
-    return NextResponse.json({ positive: text, negative: '' });
+
+    return NextResponse.json({
+      positive: parsed.positive || '',
+      negative: parsed.negative || '',
+      imageDataUrl: image ? `data:${image.mimeType};base64,${image.imageBytes}` : null,
+    });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

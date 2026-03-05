@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const NAV_ITEMS = [
   { label: 'Tools', type: 'section' },
@@ -11,22 +11,17 @@ const NAV_ITEMS = [
   { num: '02', label: '테토에겐 테스트', href: '/teto' },
   { num: '03', label: '점검표 생성', href: '/checklist' },
   { num: '04', label: '보도자료 생성기', href: '/press' },
-  { num: '05', label: 'AI 법률 검색', href: '/law' },
-  { num: '06', label: '이미지 프롬프트', href: '/img-prompt' },
-  { num: '07', label: '녹음 변환·요약', href: '/record' },
+  { num: '05', label: '이미지 프롬프트', href: '/img-prompt' },
+  { num: '06', label: '녹음 변환·요약', href: '/record' },
   { label: 'divider', type: 'divider' },
   { label: 'Community', type: 'section' },
-  { num: '08', label: '꿀팁 공유', href: '/tips' },
-  { num: '09', label: '아이디어 제안소', href: '/ideas' },
+  { num: '07', label: '꿀팁 공유', href: '/tips' },
+  { num: '08', label: '아이디어 제안소', href: '/ideas' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   return (
     <>
@@ -147,6 +142,7 @@ export default function Sidebar() {
                   key={item.href}
                   href={item.href!}
                   className="nav-link"
+                  onClick={() => setOpen(false)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

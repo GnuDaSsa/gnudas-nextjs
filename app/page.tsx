@@ -7,11 +7,10 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '02', label: '테토에겐 테스트',       href: '/teto',       desc: '감수성 유형 진단' },
   { num: '03', label: '도급위탁용역 점검표',   href: '/checklist',  desc: '업무 체크리스트 자동 생성' },
   { num: '04', label: '보도자료 생성기',       href: '/press',      desc: 'AI 작성 보도자료 초안' },
-  { num: '05', label: 'AI 법률 검색',          href: '/law',        desc: '법령 기반 질의응답' },
-  { num: '06', label: '이미지 프롬프트',       href: '/img-prompt', desc: '생성형 AI 프롬프트 작성기' },
-  { num: '07', label: '녹음 변환·요약',        href: '/record',     desc: '음성 → 텍스트 + 요약' },
-  { num: '08', label: '꿀팁 공유',             href: '/tips',       desc: '업무 AI 활용 노하우' },
-  { num: '09', label: '아이디어 제안소',       href: '/ideas',      desc: '아이디어 수집 및 고도화' },
+  { num: '05', label: '이미지 프롬프트',       href: '/img-prompt', desc: '프롬프트 + 실제 이미지 생성' },
+  { num: '06', label: '녹음 변환·요약',        href: '/record',     desc: '음성 → 텍스트 + 요약' },
+  { num: '07', label: '꿀팁 공유',             href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
+  { num: '08', label: '아이디어 제안소',       href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -186,7 +185,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>09 items</span>
+            }}>08 items</span>
           </div>
 
           {/* 번호 목록 */}
@@ -321,6 +320,42 @@ export default function HomePage() {
                   display: 'inline-block',
                 }} />
                 <span style={{ fontSize: '0.9rem', color: '#aaa', lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── 에이전트 작업 시각화 ── */}
+        <section style={{
+          maxWidth: 960,
+          margin: '0 auto',
+          padding: '0 2rem 2.4rem',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          <div style={{
+            fontFamily: 'monospace',
+            fontSize: '0.72rem',
+            color: '#75e8ff',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            margin: '1.2rem 0 0.9rem',
+          }}>Agent Pipeline</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
+            {[
+              { name: 'Planner Agent', state: 'RUNNING', detail: '요구사항 분석' },
+              { name: 'Design Agent', state: 'DONE', detail: 'UI 스케치 반영' },
+              { name: 'Coding Agent', state: 'RUNNING', detail: '기능 개발/수정' },
+              { name: 'QA Agent', state: 'QUEUED', detail: '검증 대기' },
+            ].map((agent) => (
+              <div key={agent.name} style={{
+                border: '1px solid rgba(117,232,255,0.22)',
+                borderRadius: 10,
+                padding: '0.75rem 0.85rem',
+                background: 'rgba(10,18,38,0.55)',
+              }}>
+                <div style={{ fontSize: '0.8rem', color: '#dbe8ff', fontWeight: 700 }}>{agent.name}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#75e8ff', marginTop: 6 }}>{agent.state}</div>
+                <div style={{ fontSize: '0.78rem', color: '#7f93bd', marginTop: 6 }}>{agent.detail}</div>
               </div>
             ))}
           </div>
