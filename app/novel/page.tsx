@@ -307,43 +307,13 @@ export default function NovelPage() {
           {/* 밝기 오버레이 */}
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(235,230,220,0.18)' }} />
 
-          {/* 콘텐츠 레이어 */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 0, paddingBottom: '16%',
-          }}>
-            {/* The Visual Novel 뱃지 */}
-            <div style={{
-              transform: `translate(${dx * 4}px, ${dy * 3}px)`,
-              transition: 'transform 0.3s ease-out',
-              animation: 'subFloat 4s ease-in-out infinite',
-              border: '2px solid #111', padding: '3px 16px', marginBottom: 'clamp(8px,2vw,14px)',
-              fontFamily: 'serif', fontSize: 'clamp(0.62rem,1.5vw,0.85rem)', fontWeight: 700,
-              background: 'rgba(255,255,255,0.82)', color: '#111', letterSpacing: '0.12em',
-              opacity: 0, animationFillMode: 'forwards',
-            }}
-              onAnimationStart={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
-            >The Visual Novel</div>
-
-            {/* 메인 타이틀 */}
-            <div style={{
-              transform: `translate(${dx * 8}px, ${dy * 5}px)`,
-              transition: 'transform 0.25s ease-out',
-              animation: 'titleFloat 3.5s ease-in-out infinite',
-              fontSize: 'clamp(2.2rem,6.5vw,4.8rem)', fontWeight: 900, color: '#0e0e0e',
-              textAlign: 'center', lineHeight: 1.08,
-              textShadow: '2px 2px 0 rgba(0,0,0,0.08)',
-              letterSpacing: '-0.01em',
-            }}>나는 지방직<br />공무원이다</div>
-
-            {/* 시작하기 버튼 */}
+          {/* 시작하기 버튼만 */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '10%' }}>
             <button
               onClick={startGame}
               onMouseEnter={() => setBtnHover(true)}
               onMouseLeave={() => setBtnHover(false)}
               style={{
-                marginTop: 'clamp(1.2rem,3.5vw,2.2rem)',
                 padding: 'clamp(0.55rem,1.4vw,0.85rem) clamp(1.8rem,5vw,3.2rem)',
                 background: btnHover ? '#111' : 'rgba(255,255,255,0.88)',
                 border: '2.5px solid #111',
