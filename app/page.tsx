@@ -12,6 +12,7 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '07', label: '꿀팁 공유',             href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
   { num: '08', label: '아이디어 제안소',       href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
   { num: '09', label: '공무원 비주얼노벨',    href: '/novel',      desc: '지방직 토목직 1년차 이야기' },
+  { num: '10', label: '작가 에이전트',        href: '/writer',     desc: '소설 · 각본 · 대본 전문 창작 AI' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -244,7 +245,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>09 items</span>
+            }}>10 items</span>
           </div>
 
           {/* 번호 목록 */}
