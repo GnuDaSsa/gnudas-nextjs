@@ -3,15 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
-  { num: '01', label: 'MBTI 검사기',          href: '/mbti',       desc: 'GPT 기반 성격 유형 분석' },
-  { num: '02', label: '테토에겐 테스트',       href: '/teto',       desc: '감수성 유형 진단' },
-  { num: '03', label: '도급위탁용역 점검표',   href: '/checklist',  desc: '업무 체크리스트 자동 생성' },
-  { num: '04', label: '보도자료 생성기',       href: '/press',      desc: 'AI 작성 보도자료 초안' },
-  { num: '05', label: '이미지 프롬프트',       href: '/img-prompt', desc: '프롬프트 + 실제 이미지 생성' },
-  { num: '06', label: '녹음 변환·요약',        href: '/record',     desc: '음성 → 텍스트 + 요약' },
-  { num: '07', label: '꿀팁 공유',             href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
-  { num: '08', label: '아이디어 제안소',       href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
-  { num: '09', label: '공무원 비주얼노벨',    href: '/novel',      desc: '' },
+  { num: '01', label: 'MBTI 검사기',       href: '/mbti',       desc: 'GPT 기반 성격 유형 분석' },
+  { num: '02', label: '테토에겐 테스트',    href: '/teto',       desc: '감수성 유형 진단' },
+  { num: '03', label: '보도자료 생성기',    href: '/press',      desc: 'AI 작성 보도자료 초안' },
+  { num: '04', label: '이미지 프롬프트',    href: '/img-prompt', desc: '프롬프트 변환 + 이미지 생성' },
+  { num: '05', label: '녹음 변환·요약',     href: '/record',     desc: '음성 → 텍스트 + 요약' },
+  { num: '06', label: '꿀팁 공유',          href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
+  { num: '07', label: '아이디어 제안소',    href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
+  { num: '08', label: '공무원 비주얼노벨', href: '/novel',      desc: '' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -244,7 +243,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>10 items</span>
+            }}>8 items</span>
           </div>
 
           {/* 번호 목록 */}
