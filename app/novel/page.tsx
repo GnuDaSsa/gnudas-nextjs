@@ -35,7 +35,18 @@ function processToInteractive(scene: string, beatIdx: number, vars: Vars, chars:
     const sd = STORY[s];
     if (!sd) return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '' };
     if (i >= sd.beats.length) {
-      if (sd.next) { s = sd.next; i = 0; continue; }
+      if (sd.next) {
+        // 엔딩 분기: ending_branch 씬에서 변수로 엔딩 결정
+        if (sd.next === 'ending_branch') {
+          const m = v.mentality, t = v.team_bond;
+          if (m >= 2 && t >= 3)      { s = 'ending_growth';   }
+          else if (m < 0 && t >= 3)  { s = 'ending_team';     }
+          else if (m >= 2 && t < 2)  { s = 'ending_solo';     }
+          else                       { s = 'ending_burnout';  }
+          i = 0; continue;
+        }
+        s = sd.next; i = 0; continue;
+      }
       return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '' };
     }
     const beat = sd.beats[i];
