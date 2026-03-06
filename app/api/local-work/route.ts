@@ -14,7 +14,7 @@ function safe(cmd: string) {
 
 function detectModel(line: string) {
   const v = line.toLowerCase();
-  if (v.includes('codex') || v.includes('openclaw')) return 'gpt-5.3-codex';
+  if (v.includes('codex') || v.includes('openclaw')) return 'gpt-5.4-medium';
   if (v.includes('claude')) return 'claude-sonnet';
   if (v.includes('next dev')) return 'local-runtime';
   return 'unknown';
@@ -47,10 +47,10 @@ export async function GET() {
   }));
 
   const agentPipeline = [
-    { name: 'Planner Agent', model: 'gpt-5.3-codex', state: 'DONE', detail: '요구사항 해석 완료' },
+    { name: 'Planner Agent', model: 'gpt-5.4-medium', state: 'DONE', detail: '요구사항 해석 완료' },
     {
       name: 'Coding Agent',
-      model: 'gpt-5.3-codex',
+      model: 'gpt-5.4-medium',
       state: changedCount > 0 ? 'RUNNING' : 'IDLE',
       detail: changedCount > 0 ? `${changedCount}개 파일 로컬 변경 감지` : '작업 대기 중',
     },

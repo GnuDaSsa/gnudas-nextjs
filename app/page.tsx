@@ -244,7 +244,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>08 items</span>
+            }}>09 items</span>
           </div>
 
           {/* 번호 목록 */}

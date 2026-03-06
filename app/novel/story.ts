@@ -88,8 +88,7 @@ export const STORY: Record<string, Scene> = {
       { kind: 'hideAll' },
       { kind: 'bg', name: 'office_construction' },
       { kind: 'narration', text: '사무실 문이 열리자 프린터 소리와 전화벨, 서류 넘기는 소리가 한꺼번에 들이쳤다.' },
-      { kind: 'show', chars: [{ id: 'chief', pos: 'right' }] },
-      { kind: 'dialogue', who: 'chief', text: '오늘부터 우리 팀에서 일할 신규야. 다들 얼굴만 익혀둬.' },
+      { kind: 'show', chars: [{ id: 'chief', pos: 'right' }] },      { kind: 'dialogue', who: 'chief', text: '오늘부터 우리 팀에서 일할 신규야. 다들 얼굴만 익혀둬.' },
       { kind: 'narration', text: '과장, 팀장, 차석, 삼석, 사석.' },
       { kind: 'narration', text: '그리고 맨 끝에 나.' },
       { kind: 'hide', ids: ['chief'] },
@@ -117,8 +116,9 @@ export const STORY: Record<string, Scene> = {
   first_call: {
     beats: [
       { kind: 'hideAll' },
-      { kind: 'show', chars: [{ id: 'caller', pos: 'caller' }, { id: 'protagonist', pos: 'left' }] },
+      { kind: 'show', chars: [{ id: 'caller', pos: 'caller' }] },
       { kind: 'dialogue', who: 'caller', text: '여보세요? 도로 파헤쳐놓고 왜 아직도 정리를 안 해요?' },
+      { kind: 'show', chars: [{ id: 'protagonist', pos: 'left' }] },
       { kind: 'dialogue', who: 'protagonist', text: '아, 제가 오늘 처음 와서...' },
       { kind: 'dialogue', who: 'caller', text: '처음 오면 아무것도 안 해도 돼요? 담당이면 책임을 져야지!' },
       { kind: 'narration', text: '욕은 아니었지만, 욕보다 더 선명하게 아팠다.' },
@@ -163,9 +163,9 @@ export const STORY: Record<string, Scene> = {
     beats: [
       { kind: 'hideAll' },
       { kind: 'bg', name: 'winter_road' },
-      { kind: 'show', chars: [{ id: 'chief', pos: 'left' }] },
       { kind: 'narration', text: '계절이 바뀌고 겨울이 왔다.' },
       { kind: 'narration', text: '건설과의 공기는 더 차가워졌고, 설해대책 기간이 시작되었다.' },
+      { kind: 'show', chars: [{ id: 'chief', pos: 'left' }] },
       { kind: 'dialogue', who: 'chief', text: '오늘 밤 눈 예보 있어. 비상대기 걸릴 수 있으니까 핸드폰 소리 키워둬.' },
       { kind: 'narration', text: '새벽에 울리는 단체 연락, 제설재 확인, 민원 대비 연락망.' },
       { kind: 'narration', text: '처음에는 내가 왜 새벽 다섯 시에 도로 결빙 사진을 보고 있는지 이해할 수 없었다.' },
@@ -179,11 +179,11 @@ export const STORY: Record<string, Scene> = {
   winter_relief: {
     beats: [
       { kind: 'hideAll' },
-      { kind: 'show', chars: [{ id: 'deputy', pos: 'right' }] },
       { kind: 'narration', text: '그래도 겨울에는 한 가지 위안이 있었다.' },
       { kind: 'narration', text: '3월까지는 추워서 사람들이 덜 싸돌아다닌다.' },
       { kind: 'narration', text: '도로 점용이니 포장 파손이니 주정차 동선이니, 그런 민원이 확실히 줄었다.' },
       { kind: 'narration', text: '사무실 난방 바람을 맞으며 조용한 오전을 보내는 날이면, 아주 잠깐 행복하다는 생각도 들었다.' },
+      { kind: 'show', chars: [{ id: 'deputy', pos: 'right' }] },
       { kind: 'dialogue', who: 'deputy', text: '이때 숨 좀 돌려놔요. 4월 오면 다시 시작이니까.' },
       { kind: 'narration', text: '그 말은 예언이었다.' },
     ],
@@ -214,10 +214,10 @@ export const STORY: Record<string, Scene> = {
   spring_resolution: {
     beats: [
       { kind: 'hideAll' },
-      { kind: 'show', chars: [{ id: 'deputy', pos: 'left' }, { id: 'manager', pos: 'right' }] },
       { kind: 'narration', text: '어느 쪽을 택해도 완벽한 해결은 없었다.' },
       { kind: 'narration', text: '대신 조금씩 알게 되었다.' },
       { kind: 'narration', text: '민원은 문제 하나만 담고 오는 게 아니라, 사람의 조급함과 억울함과 기대까지 같이 실려 온다는 걸.' },
+      { kind: 'show', chars: [{ id: 'deputy', pos: 'left' }, { id: 'manager', pos: 'right' }] },
       { kind: 'dialogue', who: 'deputy', text: '버티는 것도 실력이에요.' },
       { kind: 'dialogue', who: 'manager', text: '그래도 너, 처음보단 표정이 덜 놀라네.' },
       { kind: 'narration', text: '그 말이 칭찬인지 위로인지는 모르겠지만, 이상하게 오래 남았다.' },
@@ -229,9 +229,9 @@ export const STORY: Record<string, Scene> = {
     beats: [
       { kind: 'hideAll' },
       { kind: 'bg', name: 'office_evening' },
-      { kind: 'show', chars: [{ id: 'buddy', pos: 'left' }] },
       { kind: 'narration', text: '그렇게 정신없이 계절이 한 바퀴 돌았다.' },
       { kind: 'narration', text: '모든 게 익숙해질 즈음, 인사이동 명단이 내려왔다.' },
+      { kind: 'show', chars: [{ id: 'buddy', pos: 'left' }] },
       { kind: 'dialogue', who: 'buddy', text: '야, 나 다른 동으로 간다.' },
       { kind: 'hide', ids: ['buddy'] },
       { kind: 'show', chars: [{ id: 'deputy', pos: 'left' }, { id: 'protagonist', pos: 'right' }] },
