@@ -53,14 +53,14 @@ const INIT = processToInteractive('start', 0, { mentality: 0, team_bond: 0 }, []
 
 function getCharStyle(pos: Position): React.CSSProperties {
   const common: React.CSSProperties = {
-    position: 'absolute', bottom: '21%', height: pos === 'caller' ? '60%' : '68%',
+    position: 'absolute', bottom: '21%', height: pos === 'caller' ? '130%' : '68%',
     width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.7))',
     pointerEvents: 'none', userSelect: 'none',
   };
   if (pos === 'left'       || pos === 'left_low')   return { ...common, left: '3%', bottom: pos === 'left_low' ? '16%' : '21%' };
   if (pos === 'center'     || pos === 'center_low') return { ...common, left: '50%', transform: 'translateX(-50%)', bottom: pos === 'center_low' ? '16%' : '21%' };
   if (pos === 'right'      || pos === 'right_low')  return { ...common, right: '3%', bottom: pos === 'right_low' ? '16%' : '21%' };
-  if (pos === 'caller')    return { ...common, right: '0%', bottom: '21%', height: '60%' };
+  if (pos === 'caller')    return { ...common, top: '-47%', right: '-15%', bottom: 'auto' };
   return common;
 }
 

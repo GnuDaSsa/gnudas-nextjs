@@ -34,7 +34,8 @@ export const CHAR_INFO: Record<CharId, { name: string; color: string }> = {
 
 const RAW = 'https://raw.githubusercontent.com/GnuDaSsa/AI/feature/novel-lab-initial/novel-lab/renpy/game/images';
 export const BG_URL = (name: string) => `${RAW}/bg/${name}.png`;
-export const CHAR_URL = (id: CharId) => `${RAW}/chars/${id}_default.png`;
+export const CHAR_URL = (id: CharId) =>
+  id === 'caller' ? '/novel/chars/caller_default.png' : `${RAW}/chars/${id}_default.png`;
 
 export const STORY: Record<string, Scene> = {
   start: {
