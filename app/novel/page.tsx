@@ -62,9 +62,10 @@ function processToInteractive(scene: string, beatIdx: number, vars: Vars, chars:
 
 const INIT = processToInteractive('start', 0, { mentality: 0, team_bond: 0 }, [], null);
 
-function getCharStyle(pos: Position): React.CSSProperties {
+function getCharStyle(pos: Position, id?: string): React.CSSProperties {
+  const isSmallCaller = id === 'caller_ice' || id === 'caller_spring';
   const common: React.CSSProperties = {
-    position: 'absolute', bottom: '21%', height: pos === 'caller' ? '130%' : '68%',
+    position: 'absolute', bottom: '21%', height: pos === 'caller' ? (isSmallCaller ? '65%' : '130%') : '68%',
     width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.7))',
     pointerEvents: 'none', userSelect: 'none',
   };
@@ -315,7 +316,7 @@ export default function NovelPage() {
 
           {/* Characters */}
           {state.chars.map(ch => (
-            <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} style={getCharStyle(ch.pos)} />
+            <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} style={getCharStyle(ch.pos, ch.id)} />
           ))}
 
           {/* TOP-LEFT: Stats box */}
