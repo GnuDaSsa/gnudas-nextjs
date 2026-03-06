@@ -11,8 +11,7 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '06', label: '녹음 변환·요약',        href: '/record',     desc: '음성 → 텍스트 + 요약' },
   { num: '07', label: '꿀팁 공유',             href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
   { num: '08', label: '아이디어 제안소',       href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
-  { num: '09', label: '공무원 비주얼노벨',    href: '/novel',      desc: '지방직 토목직 1년차 이야기' },
-  { num: '10', label: '작가 에이전트',        href: '/writer',     desc: '소설 · 각본 · 대본 전문 창작 AI' },
+  { num: '09', label: '공무원 비주얼노벨',    href: '/novel',      desc: '' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -147,7 +146,7 @@ export default function HomePage() {
             fontSize: '0.78rem',
             color: '#888',
             letterSpacing: '0.06em',
-          }}>Updated 2026.02</span>
+          }}>Updated 2026.03</span>
         </header>
 
         {/* ── 히어로 섹션 ── */}
@@ -383,46 +382,6 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </section>
-
-        {/* ── 에이전트 작업 시각화 ── */}
-        <section style={{
-          maxWidth: 960,
-          margin: '0 auto',
-          padding: '0 2rem 2.4rem',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-        }}>
-          <div style={{
-            fontFamily: 'monospace',
-            fontSize: '0.72rem',
-            color: '#75e8ff',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            margin: '1.2rem 0 0.9rem',
-          }}>Agent Pipeline</div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: 10,
-            marginBottom: 10,
-            flexWrap: 'wrap',
-            fontFamily: 'monospace',
-            fontSize: '0.72rem',
-            color: '#86a1d8',
-          }}>
-            <span>branch: {localWork?.branch || 'loading...'}</span>
-            <span>changed: {localWork?.changedCount ?? '-'}</span>
-            <span>updated: {localWork ? new Date(localWork.updatedAt).toLocaleTimeString('ko-KR') : '-'}</span>
-          </div>
-
-          {localWork?.changedFiles?.length ? (
-            <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#8ea5d6', lineHeight: 1.6 }}>
-              <div style={{ fontFamily: 'monospace', marginBottom: 4, color: '#b6c7ea' }}>local changed files</div>
-              {localWork.changedFiles.map((f) => (
-                <div key={f}>• {f}</div>
-              ))}
-            </div>
-          ) : null}
         </section>
 
         {/* ── 푸터 ── */}

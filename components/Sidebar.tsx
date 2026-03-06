@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { label: 'Community', type: 'section' },
   { num: '07', label: '꿀팁 공유', href: '/tips' },
   { num: '08', label: '아이디어 제안소', href: '/ideas' },
+  { num: '09', label: '공무원 비주얼노벨', href: '/novel' },
 ];
 
 export default function Sidebar() {
