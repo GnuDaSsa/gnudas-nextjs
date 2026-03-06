@@ -311,7 +311,7 @@ export default function NovelPage() {
           <div style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 0,
+            gap: 0, paddingBottom: '16%',
           }}>
             {/* The Visual Novel 뱃지 */}
             <div style={{
