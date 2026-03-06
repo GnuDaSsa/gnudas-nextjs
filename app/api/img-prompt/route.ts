@@ -8,27 +8,24 @@ export async function POST(req: NextRequest) {
   const { prompt, style, aspectRatio } = await req.json();
 
   const systemPrompt = `You are an expert image prompt engineer.
-Convert the user's Korean description into a structured image generation prompt.
-Return JSON with two fields:
-- "positive": detailed English prompt for image generation (include style: ${style}, aspect ratio: ${aspectRatio})
-- "negative": negative prompt to avoid common issues
+Convert the user's Korean description into a detailed English image generation prompt.
+Include the style (${style}) and aspect ratio context (${aspectRatio}) naturally in the prompt.
+Return JSON with one field:
+- "prompt": a detailed, vivid English prompt for image generation
 
-Be specific and detailed. Return ONLY valid JSON.`;
+Be specific about lighting, composition, mood, and visual details. Return ONLY valid JSON.`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser description: ${prompt}` }] }],
+      config: { responseMimeType: 'application/json' },
     });
 
     const text = response.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { positive: text, negative: '' };
+    const parsed = JSON.parse(text);
 
-    return NextResponse.json({
-      positive: parsed.positive || '',
-      negative: parsed.negative || '',
-    });
+    return NextResponse.json({ prompt: parsed.prompt || text });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

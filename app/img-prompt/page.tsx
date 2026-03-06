@@ -8,8 +8,7 @@ export default function ImgPromptPage() {
   const [input, setInput] = useState('');
   const [style, setStyle] = useState(STYLES[0]);
   const [ratio, setRatio] = useState(RATIOS[0]);
-  const [positive, setPositive] = useState('');
-  const [negative, setNegative] = useState('');
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
   const [loadingImage, setLoadingImage] = useState(false);
@@ -40,8 +39,7 @@ export default function ImgPromptPage() {
   async function makePrompt() {
     if (!input.trim()) return;
     setLoadingPrompt(true);
-    setPositive('');
-    setNegative('');
+    setGeneratedPrompt('');
     setImageDataUrl(null);
     try {
       const res = await fetch('/api/img-prompt', {
@@ -50,22 +48,21 @@ export default function ImgPromptPage() {
         body: JSON.stringify({ prompt: input, style, aspectRatio: ratio }),
       });
       const data = await res.json();
-      setPositive(data.positive || '');
-      setNegative(data.negative || '');
+      setGeneratedPrompt(data.prompt || '');
     } finally {
       setLoadingPrompt(false);
     }
   }
 
   async function generateImage() {
-    if (!positive) return;
+    if (!generatedPrompt) return;
     setLoadingImage(true);
     setImageDataUrl(null);
     try {
       const res = await fetch('/api/img-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ positive, aspectRatio: ratio }),
+        body: JSON.stringify({ prompt: generatedPrompt, aspectRatio: ratio }),
       });
       const data = await res.json();
       setImageDataUrl(data.imageDataUrl || null);
@@ -77,7 +74,7 @@ export default function ImgPromptPage() {
   return (
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.4rem' }}>AI 이미지 생성기</h1>
-      <p style={{ color: '#d5def3', marginBottom: '1.2rem', fontSize: '0.9rem' }}>한국어 설명을 프롬프트로 변환한 뒤, 별도로 이미지를 생성합니다.</p>
+      <p style={{ color: '#d5def3', marginBottom: '1.2rem', fontSize: '0.9rem' }}>한국어 설명을 영문 프롬프트로 변환한 뒤, 이미지를 생성합니다.</p>
 
       {/* STEP 1 */}
       <div style={cardStyle}>
@@ -114,25 +111,15 @@ export default function ImgPromptPage() {
       </div>
 
       {/* STEP 2 — 프롬프트 결과 */}
-      {positive && (
+      {generatedPrompt && (
         <>
           <div style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontWeight: 800, color: '#75e8ff' }}>Positive Prompt</div>
-              <button onClick={() => copyText(positive)} style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
+              <div style={{ fontWeight: 800, color: '#75e8ff' }}>생성된 프롬프트</div>
+              <button onClick={() => copyText(generatedPrompt)} style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
             </div>
-            <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.6, wordBreak: 'break-word' }}>{positive}</div>
+            <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.6, wordBreak: 'break-word' }}>{generatedPrompt}</div>
           </div>
-
-          {negative && (
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <div style={{ fontWeight: 800, color: '#ff77e6' }}>Negative Prompt</div>
-                <button onClick={() => copyText(negative)} style={{ background: 'rgba(255,119,230,0.15)', border: '1px solid rgba(255,119,230,0.3)', borderRadius: 6, color: '#ff77e6', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
-              </div>
-              <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.6, wordBreak: 'break-word' }}>{negative}</div>
-            </div>
-          )}
 
           <button
             style={{ background: 'linear-gradient(90deg,#f97316,#ec4899)', color: '#fff', fontWeight: 800, border: 'none', borderRadius: 10, padding: '0.65rem 1.4rem', cursor: loadingImage ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: loadingImage ? 0.7 : 1, marginBottom: '1rem', width: '100%' }}
