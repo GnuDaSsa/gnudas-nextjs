@@ -11,6 +11,7 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '06', label: '녹음 변환·요약',        href: '/record',     desc: '음성 → 텍스트 + 요약' },
   { num: '07', label: '꿀팁 공유',             href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
   { num: '08', label: '아이디어 제안소',       href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
+  { num: '09', label: '공무원 비주얼노벨',    href: '/novel',      desc: '지방직 토목직 1년차 이야기' },
 ];
 
 const PASSIVE_ACTIVITIES = [
