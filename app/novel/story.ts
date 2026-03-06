@@ -186,7 +186,7 @@ export const STORY: Record<string, Scene> = {
       { kind: 'show', chars: [{ id: 'deputy', pos: 'right' }] },
       { kind: 'dialogue', who: 'deputy', text: '주사님, 차 살 생각 있어요?' },
       { kind: 'dialogue', who: 'protagonist', text: '아니요... 왜요?' },
-      { kind: 'dialogue', who: 'deputy', text: '아, 우리는 당분간 52시간 넘게 초과를 찍게 될 거에요. 차 사기 딱 좋은 시점이지.' },
+      { kind: 'dialogue', who: 'deputy', text: '아, 우리는 당분간 57시간 넘게 초과를 찍게 될 거에요. 차 사기 딱 좋은 시점이지.' },
       { kind: 'narration', text: '웃자고 한 말인 건 알았다. 그런데 웃음이 나오지 않았다.' },
       { kind: 'hide', ids: ['deputy'] },
       { kind: 'choice', options: [
