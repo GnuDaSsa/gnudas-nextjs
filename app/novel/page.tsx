@@ -497,12 +497,12 @@ export default function NovelPage() {
           {/* Choices overlay */}
           {currentBeat?.kind === 'choice' && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.52)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '58%', maxWidth: 460 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '68%', maxWidth: 520 }}>
                 {currentBeat.options.map((opt, i) => (
                   <button
                     key={i}
                     onClick={() => choose(i)}
-                    style={{ padding: '0.75rem 1.1rem', background: 'rgba(15,28,75,0.92)', border: '1px solid rgba(90,140,255,0.4)', color: '#d8e8ff', borderRadius: 8, cursor: 'pointer', fontSize: '1rem', lineHeight: 1.6, textAlign: 'center' }}
+                    style={{ padding: '0.75rem 1.1rem', background: 'rgba(15,28,75,0.92)', border: '1px solid rgba(90,140,255,0.4)', color: '#d8e8ff', borderRadius: 8, cursor: 'pointer', fontSize: '1rem', lineHeight: 1.6, textAlign: 'center', letterSpacing: '-0.04em', whiteSpace: 'nowrap' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(35,60,150,0.92)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'rgba(15,28,75,0.92)')}
                   >
