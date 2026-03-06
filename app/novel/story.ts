@@ -335,9 +335,9 @@ export const STORY: Record<string, Scene> = {
       { kind: 'narration', text: '도로안전시설 설치·관리에 관한 규칙상 시선유도봉은 안전지대, 차선 변경 구간 등 시선 유도가 실제로 필요한 구간에만 설치할 수 있다. 주차를 막겠다고 도로 위에 임의로 박는 건 위법이다.' },
       { kind: 'narration', text: '내가 해줄 수 있는 게 없다. 법이 그렇게 돼있다. 근데 이걸 어떻게 받아들이게 할 수 있을까.' },
       { kind: 'choice', options: [
-        { text: '규정을 내세워 끝까지 안 된다고 버틴다', effects: { mentality: 1, team_bond: -1 }, jump: 'spring_defend' },
-        { text: '왜 안 되는지 차분히 설명하고, 가능한 다른 방법을 함께 찾아본다', effects: { mentality: -1, team_bond: 1 }, jump: 'spring_defend' },
-        { text: '민원이 너무 악질이다. 법 취지는 맞지 않지만 어떻게든 대안을 찾아 마무리해버린다', effects: { mentality: 1, team_bond: 1 }, jump: 'spring_yield' },
+        { text: '규정을 내세워 끝까지 안 된다고 버틴다', effects: { mentality: 1, team_bond: 1 }, jump: 'spring_defend' },
+        { text: '왜 안 되는지 차분히 설명하고, 가능한 다른 방법을 함께 찾아본다', effects: { mentality: -1, team_bond: 2 }, jump: 'spring_defend' },
+        { text: '민원이 너무 악질이다. 법 취지는 맞지 않지만 어떻게든 대안을 찾아 마무리해버린다', effects: { team_bond: 1 }, jump: 'spring_yield' },
       ]},
     ],
   },
