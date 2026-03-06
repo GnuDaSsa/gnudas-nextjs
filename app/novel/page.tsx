@@ -240,6 +240,11 @@ export default function NovelPage() {
     setTextKey(k => k + 1);
   }, []);
 
+  const tryTrueEnding = useCallback(() => {
+    setState(prev => processToInteractive('spring_arc', 0, { mentality: 2, team_bond: 2 }, [], null, prev.items));
+    setTextKey(k => k + 1);
+  }, []);
+
   const restart = useCallback(() => {
     // Exit fullscreen & unlock orientation
     try {
@@ -262,7 +267,9 @@ export default function NovelPage() {
   const m = state.vars.mentality;
   const t = state.vars.team_bond;
   const hasKey = state.items.includes('mystery_key');
+  const isGrowthEnding = state.scene === 'ending_growth' || state.scene === 'ending_growth_key';
   const showKeyPopup = state.ended && state.scene === 'ending_growth' && hasKey;
+  const showTrueEndingHint = state.ended && !isGrowthEnding;
 
   /* ── START SCREEN ── */
   if (!gameStarted) {
@@ -343,6 +350,22 @@ export default function NovelPage() {
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(180,150,40,0.25)')}
               >
                 사용
+              </button>
+            </div>
+          )}
+
+          {/* 진엔딩 힌트 — 성장 엔딩이 아닐 때 */}
+          {showTrueEndingHint && (
+            <div style={{ marginTop: 4, padding: '16px 22px', background: 'rgba(6,10,30,0.9)', border: '1px solid rgba(100,80,200,0.4)', borderRadius: 10, maxWidth: 340, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.72rem', color: '#7a6aaa', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 6 }}>🔒 숨겨진 엔딩</div>
+              <div style={{ fontSize: '0.92rem', color: '#c8b8ff', marginBottom: 12, lineHeight: 1.6 }}>진엔딩이 존재한다</div>
+              <button
+                onClick={tryTrueEnding}
+                style={{ padding: '0.5rem 1.3rem', background: 'rgba(80,50,180,0.3)', border: '1px solid rgba(120,90,255,0.55)', color: '#b8a0ff', borderRadius: 7, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.05em' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(80,50,180,0.55)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(80,50,180,0.3)')}
+              >
+                마지막 분기로 돌아가기 (멘탈 +2 · 팀유대 +2)
               </button>
             </div>
           )}
