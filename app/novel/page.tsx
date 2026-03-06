@@ -79,7 +79,7 @@ function getCharStyle(pos: Position): React.CSSProperties {
 const BGM3_SCENES = new Set([
   'first_call', 'early_days', 'winter_arc', 'winter_relief',
   'ice_claim', 'choice_explain', 'choice_empathy', 'choice_escalate',
-  'spring_arc', 'spring_resolution',
+  'spring_arc', 'spring_defend', 'spring_yield', 'spring_resolution',
 ]);
 const BGM2_SCENES = new Set([
   'transfer_end', 'ending_branch',
@@ -94,10 +94,12 @@ function getBgmTrack(scene: string, ended: boolean): 1 | 2 | 3 {
 export default function NovelPage() {
   const [state, setState] = useState<GameState>(INIT);
   const [textKey, setTextKey] = useState(0);
+  const [bgmOn, setBgmOn] = useState(true);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
   const bgm3Ref = useRef<HTMLAudioElement | null>(null);
   const startedRef = useRef(false);
+  const currentTrackRef = useRef(0);
 
   // Init audio elements once
   useEffect(() => {
@@ -114,6 +116,7 @@ export default function NovelPage() {
     const start = () => {
       if (startedRef.current) return;
       startedRef.current = true;
+      a1.currentTime = 0;
       a1.play().catch(() => {});
       document.removeEventListener('click', start);
     };
@@ -124,17 +127,42 @@ export default function NovelPage() {
     };
   }, []);
 
-  // Switch BGM based on scene
+  // Switch BGM based on scene — always restart from beginning on track change
   useEffect(() => {
     if (!startedRef.current) return;
     const refs = [bgm1Ref.current, bgm2Ref.current, bgm3Ref.current];
     const track = getBgmTrack(state.scene, state.ended);
+    const changed = track !== currentTrackRef.current;
+    currentTrackRef.current = track;
     refs.forEach((a, i) => {
       if (!a) return;
-      if (i + 1 === track) { if (a.paused) a.play().catch(() => {}); }
-      else                  { if (!a.paused) a.pause(); }
+      if (i + 1 === track) {
+        if (changed) { a.currentTime = 0; }
+        if (bgmOn && a.paused) a.play().catch(() => {});
+        else if (!bgmOn && !a.paused) a.pause();
+      } else {
+        if (!a.paused) a.pause();
+        if (changed) a.currentTime = 0;
+      }
     });
-  }, [state.scene, state.ended]);
+  }, [state.scene, state.ended, bgmOn]);
+
+  // BGM toggle
+  const toggleBgm = useCallback(() => {
+    setBgmOn(v => {
+      const next = !v;
+      const refs = [bgm1Ref.current, bgm2Ref.current, bgm3Ref.current];
+      const track = currentTrackRef.current;
+      refs.forEach((a, i) => {
+        if (!a) return;
+        if (i + 1 === track) {
+          if (next) a.play().catch(() => {});
+          else a.pause();
+        }
+      });
+      return next;
+    });
+  }, []);
 
   const advance = useCallback(() => {
     setState(prev => {
@@ -170,9 +198,14 @@ export default function NovelPage() {
         <div style={{ fontSize: 13, color: '#7a90c8', marginTop: 12, lineHeight: 2 }}>
           멘탈 {state.vars.mentality >= 0 ? '+' : ''}{state.vars.mentality}&nbsp;&nbsp;/&nbsp;&nbsp;팀유대 +{state.vars.team_bond}
         </div>
-        <button onClick={restart} style={{ marginTop: 24, padding: '0.65rem 2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.25)', color: '#dbe8ff', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
-          처음부터
-        </button>
+        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+          <button onClick={restart} style={{ padding: '0.65rem 2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.25)', color: '#dbe8ff', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
+            처음부터
+          </button>
+          <button onClick={toggleBgm} style={{ padding: '0.65rem 1rem', background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: bgmOn ? '#6a8fff' : '#555', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
+            {bgmOn ? '♪ ON' : '♪ OFF'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -239,7 +272,11 @@ export default function NovelPage() {
       </div>
 
       {/* Status bar */}
-      <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', marginTop: 6, fontSize: 11, color: '#4a5a8a' }}>
+      <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', alignItems: 'center', marginTop: 6, fontSize: 11, color: '#4a5a8a' }}>
+        <button
+          onClick={toggleBgm}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: bgmOn ? '#6a8fff' : '#444', padding: 0, letterSpacing: 1 }}
+        >{bgmOn ? '♪ BGM ON' : '♪ BGM OFF'}</button>
         <span>멘탈 {state.vars.mentality >= 0 ? '+' : ''}{state.vars.mentality}</span>
         <span>팀유대 +{state.vars.team_bond}</span>
       </div>
