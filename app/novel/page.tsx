@@ -168,18 +168,20 @@ export default function NovelPage() {
   }, []);
 
   const startGame = useCallback(async () => {
-    // Try Fullscreen API
-    try {
-      const el = document.documentElement;
-      if (el.requestFullscreen) await el.requestFullscreen();
-      else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
-    } catch { /* ignore */ }
-    // Try landscape orientation lock
-    try {
-      if (screen.orientation && (screen.orientation as any).lock) {
-        await (screen.orientation as any).lock('landscape');
-      }
-    } catch { /* ignore — iOS doesn't support this */ }
+    // 모바일에서만 전체화면 + 가로 고정
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (isMobile) {
+      try {
+        const el = document.documentElement;
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+      } catch { /* ignore */ }
+      try {
+        if (screen.orientation && (screen.orientation as any).lock) {
+          await (screen.orientation as any).lock('landscape');
+        }
+      } catch { /* ignore */ }
+    }
 
     setGameStarted(true);
     startedRef.current = true;
