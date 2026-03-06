@@ -35,7 +35,8 @@ Be specific and detailed. Return ONLY valid JSON.`;
           aspectRatio,
         },
       });
-      image = imageRes?.generatedImages?.[0]?.image || null;
+      const raw = imageRes?.generatedImages?.[0]?.image;
+      image = (raw?.mimeType && raw?.imageBytes) ? { mimeType: raw.mimeType, imageBytes: raw.imageBytes } : null;
     } catch {
       image = null;
     }
