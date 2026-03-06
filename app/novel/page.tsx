@@ -73,7 +73,8 @@ function getCharStyle(pos: Position, id?: string): React.CSSProperties {
   if (pos === 'center'     || pos === 'center_low') return { ...common, left: '50%', transform: 'translateX(-50%)', bottom: pos === 'center_low' ? '16%' : '21%' };
   if (pos === 'right'      || pos === 'right_low')  return { ...common, right: '3%', bottom: pos === 'right_low' ? '16%' : '21%' };
   if (pos === 'caller') {
-    if (isSmallCaller) return { ...common, top: '4%', right: '1%', bottom: 'auto' };
+    if (id === 'caller_ice')    return { ...common, top: '4%',  right: '1%', bottom: 'auto' };
+    if (id === 'caller_spring') return { ...common, top: '18%', right: '1%', bottom: 'auto' };
     return { ...common, top: '-47%', right: '-15%', bottom: 'auto' };
   }
   return common;
