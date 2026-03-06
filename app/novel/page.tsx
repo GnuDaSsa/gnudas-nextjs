@@ -75,19 +75,29 @@ function getCharStyle(pos: Position): React.CSSProperties {
   return common;
 }
 
-// Scenes from which bgm2 plays
+// BGM zone detection: returns 1, 2, or 3
+const BGM3_SCENES = new Set([
+  'first_call', 'early_days', 'winter_arc', 'winter_relief',
+  'ice_claim', 'choice_explain', 'choice_empathy', 'choice_escalate',
+  'spring_arc', 'spring_resolution',
+]);
 const BGM2_SCENES = new Set([
-  'transfer_end', 'spring_start', 'spring_work', 'spring_complaint',
-  'choice_explain', 'choice_empathy', 'choice_escalate',
-  'spring_sign', 'spring_final', 'ending_branch',
+  'transfer_end', 'ending_branch',
   'ending_growth', 'ending_team', 'ending_solo', 'ending_burnout',
 ]);
+function getBgmTrack(scene: string, ended: boolean): 1 | 2 | 3 {
+  if (ended || BGM2_SCENES.has(scene)) return 2;
+  if (BGM3_SCENES.has(scene)) return 3;
+  return 1;
+}
 
 export default function NovelPage() {
   const [state, setState] = useState<GameState>(INIT);
   const [textKey, setTextKey] = useState(0);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
+  const bgm3Ref = useRef<HTMLAudioElement | null>(null);
+  const startedRef = useRef(false);
 
   // Init audio elements once
   useEffect(() => {
@@ -97,30 +107,33 @@ export default function NovelPage() {
     const a2 = new Audio('/novel/bgm2.mp3');
     a2.loop = true; a2.volume = 0.35;
     bgm2Ref.current = a2;
-    // Start bgm1 on first user interaction
-    const start = () => { a1.play().catch(() => {}); document.removeEventListener('click', start); };
+    const a3 = new Audio('/novel/bgm3.mp3');
+    a3.loop = true; a3.volume = 0.35;
+    bgm3Ref.current = a3;
+
+    const start = () => {
+      if (startedRef.current) return;
+      startedRef.current = true;
+      a1.play().catch(() => {});
+      document.removeEventListener('click', start);
+    };
     document.addEventListener('click', start);
     return () => {
       document.removeEventListener('click', start);
-      a1.pause(); a2.pause();
+      a1.pause(); a2.pause(); a3.pause();
     };
   }, []);
 
   // Switch BGM based on scene
   useEffect(() => {
-    const a1 = bgm1Ref.current;
-    const a2 = bgm2Ref.current;
-    if (!a1 || !a2) return;
-    const useBgm2 = BGM2_SCENES.has(state.scene) || state.ended;
-    if (useBgm2) {
-      if (!a2.paused) return;
-      a1.pause();
-      a2.play().catch(() => {});
-    } else {
-      if (!a1.paused) return;
-      a2.pause();
-      a1.play().catch(() => {});
-    }
+    if (!startedRef.current) return;
+    const refs = [bgm1Ref.current, bgm2Ref.current, bgm3Ref.current];
+    const track = getBgmTrack(state.scene, state.ended);
+    refs.forEach((a, i) => {
+      if (!a) return;
+      if (i + 1 === track) { if (a.paused) a.play().catch(() => {}); }
+      else                  { if (!a.paused) a.pause(); }
+    });
   }, [state.scene, state.ended]);
 
   const advance = useCallback(() => {
