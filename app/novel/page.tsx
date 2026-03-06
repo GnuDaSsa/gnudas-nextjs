@@ -108,6 +108,7 @@ export default function NovelPage() {
   const [textKey, setTextKey] = useState(0);
   const [bgmOn, setBgmOn] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
+  const [isMobileGame, setIsMobileGame] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [itemNotif, setItemNotif] = useState<string | null>(null);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
@@ -207,6 +208,7 @@ export default function NovelPage() {
       } catch { /* ignore */ }
     }
 
+    setIsMobileGame(isMobile);
     setGameStarted(true);
     startedRef.current = true;
     currentTrackRef.current = 1;
@@ -300,9 +302,12 @@ export default function NovelPage() {
     );
   }
 
-  /* ── FULLSCREEN WRAPPER (game + ending) ── */
+  /* ── GAME WRAPPER (모바일: fullscreen fixed / 데스크톱: 일반 페이지 레이아웃) ── */
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={isMobileGame
+      ? { position: 'fixed', inset: 0, zIndex: 9999, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+      : { width: '100%', maxWidth: 900, margin: '0 auto 2rem' }
+    }>
       <style>{`
         @keyframes vnFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
@@ -310,8 +315,8 @@ export default function NovelPage() {
         @keyframes itemPop { 0% { opacity:0; transform: translate(-50%,-50%) scale(0.85); } 15% { opacity:1; transform: translate(-50%,-50%) scale(1.04); } 25% { transform: translate(-50%,-50%) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.95); } }
       `}</style>
 
-      {/* Portrait rotation prompt — covers everything */}
-      {isPortrait && (
+      {/* Portrait rotation prompt — 모바일 전용 */}
+      {isMobileGame && isPortrait && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(2,4,18,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, color: '#c8deff', textAlign: 'center', padding: 32 }}>
           <div style={{ fontSize: '2.8rem', animation: 'rotateBounce 1.6s ease-in-out infinite', display: 'inline-block' }}>📱</div>
           <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>기기를 가로로 돌려주세요</div>
@@ -324,7 +329,7 @@ export default function NovelPage() {
 
       {/* ── ENDING SCREEN ── */}
       {state.ended ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, textAlign: 'center', color: '#f3f7ff', padding: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, textAlign: 'center', color: '#f3f7ff', padding: 40, background: isMobileGame ? 'transparent' : '#050a1a', borderRadius: isMobileGame ? 0 : 4, minHeight: isMobileGame ? 'auto' : 360 }}>
           <div style={{ fontSize: '0.9rem', color: '#7a90c8', letterSpacing: 3 }}>— ENDING —</div>
           <div style={{ fontSize: 'clamp(1.1rem, 3vw, 1.6rem)', fontWeight: 800, marginTop: 4 }}>{state.endingText}</div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
@@ -380,9 +385,9 @@ export default function NovelPage() {
           </div>
         </div>
       ) : (
-        /* ── GAME SCREEN — fills screen with letterboxing ── */
+        /* ── GAME SCREEN ── */
         <div
-          style={{ position: 'relative', width: 'min(100vw, calc(100vh * 16 / 9))', aspectRatio: '16/9', overflow: 'hidden', background: '#000', cursor: (currentBeat?.kind === 'choice' || currentBeat?.kind === 'photo') ? 'default' : 'pointer' }}
+          style={{ position: 'relative', width: isMobileGame ? 'min(100vw, calc(100vh * 16 / 9))' : '100%', aspectRatio: '16/9', overflow: 'hidden', background: '#000', borderRadius: isMobileGame ? 0 : 4, cursor: (currentBeat?.kind === 'choice' || currentBeat?.kind === 'photo') ? 'default' : 'pointer' }}
           onClick={(currentBeat?.kind !== 'choice' && currentBeat?.kind !== 'photo') ? advance : undefined}
         >
           {/* Background */}
