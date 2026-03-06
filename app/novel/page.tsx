@@ -95,6 +95,7 @@ export default function NovelPage() {
   const [state, setState] = useState<GameState>(INIT);
   const [textKey, setTextKey] = useState(0);
   const [bgmOn, setBgmOn] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
   const bgm3Ref = useRef<HTMLAudioElement | null>(null);
@@ -112,19 +113,7 @@ export default function NovelPage() {
     const a3 = new Audio('/novel/bgm3.mp3');
     a3.loop = true; a3.volume = 0.35;
     bgm3Ref.current = a3;
-
-    const start = () => {
-      if (startedRef.current) return;
-      startedRef.current = true;
-      a1.currentTime = 0;
-      a1.play().catch(() => {});
-      document.removeEventListener('click', start);
-    };
-    document.addEventListener('click', start);
-    return () => {
-      document.removeEventListener('click', start);
-      a1.pause(); a2.pause(); a3.pause();
-    };
+    return () => { a1.pause(); a2.pause(); a3.pause(); };
   }, []);
 
   // Switch BGM based on scene — always restart from beginning on track change
@@ -164,6 +153,14 @@ export default function NovelPage() {
     });
   }, []);
 
+  const startGame = useCallback(() => {
+    setGameStarted(true);
+    startedRef.current = true;
+    currentTrackRef.current = 1;
+    const a1 = bgm1Ref.current;
+    if (a1) { a1.currentTime = 0; a1.play().catch(() => {}); }
+  }, []);
+
   const advance = useCallback(() => {
     setState(prev => {
       if (prev.ended) return prev;
@@ -185,9 +182,47 @@ export default function NovelPage() {
     setTextKey(k => k + 1);
   }, []);
 
-  const restart = useCallback(() => { setState(INIT); setTextKey(k => k + 1); }, []);
+  const restart = useCallback(() => {
+    setState(INIT);
+    setTextKey(k => k + 1);
+    setGameStarted(false);
+    startedRef.current = false;
+    currentTrackRef.current = 0;
+    [bgm1Ref, bgm2Ref, bgm3Ref].forEach(r => { if (r.current) { r.current.pause(); r.current.currentTime = 0; } });
+  }, []);
 
   const currentBeat = STORY[state.scene]?.beats[state.beatIdx];
+  const m = state.vars.mentality;
+  const t = state.vars.team_bond;
+
+  /* ── START SCREEN ── */
+  if (!gameStarted) {
+    return (
+      <div style={{ width: '100%', maxWidth: 900, margin: '0 auto 2rem' }}>
+        <style>{`
+          @keyframes titleFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes startPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(106,143,255,0.4); } 50% { box-shadow: 0 0 0 8px rgba(106,143,255,0); } }
+        `}</style>
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', background: '#050a1a', borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 60%, rgba(30,60,160,0.25) 0%, transparent 70%)' }} />
+          <div style={{ animation: 'titleFadeIn 0.8s ease both', textAlign: 'center', position: 'relative' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#4a6aaa', letterSpacing: '0.3em', marginBottom: '1.2rem', textTransform: 'uppercase' }}>Visual Novel</div>
+            <div style={{ fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', fontWeight: 900, color: '#dce8ff', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '0.4rem' }}>공무원 1년차</div>
+            <div style={{ fontSize: 'clamp(0.8rem, 2vw, 1.05rem)', color: '#6a8aaa', letterSpacing: '0.12em', marginBottom: '2.8rem' }}>토목직 첫 발령 이야기</div>
+            <button
+              onClick={startGame}
+              style={{ padding: '0.75rem 2.8rem', background: 'rgba(30,55,160,0.7)', border: '1px solid rgba(106,143,255,0.6)', color: '#c8deff', borderRadius: 8, cursor: 'pointer', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.15em', animation: 'startPulse 2s ease infinite' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(50,85,210,0.85)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(30,55,160,0.7)')}
+            >
+              시작
+            </button>
+          </div>
+          <div style={{ position: 'absolute', bottom: 14, fontFamily: 'monospace', fontSize: '0.62rem', color: '#2a3a5a', letterSpacing: '0.1em' }}>© 2026 DLC — AI Club</div>
+        </div>
+      </div>
+    );
+  }
 
   /* ── ENDING SCREEN ── */
   if (state.ended) {
@@ -195,15 +230,22 @@ export default function NovelPage() {
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, textAlign: 'center', background: '#000', color: '#f3f7ff', padding: 40 }}>
         <div style={{ fontSize: '0.9rem', color: '#7a90c8', letterSpacing: 3 }}>— ENDING —</div>
         <div style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: 8 }}>{state.endingText}</div>
-        <div style={{ fontSize: 13, color: '#7a90c8', marginTop: 12, lineHeight: 2 }}>
-          멘탈 {state.vars.mentality >= 0 ? '+' : ''}{state.vars.mentality}&nbsp;&nbsp;/&nbsp;&nbsp;팀유대 +{state.vars.team_bond}
+        <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+          <div style={{ padding: '0.5rem 1.1rem', background: 'rgba(80,120,255,0.12)', border: '1px solid rgba(80,120,255,0.25)', borderRadius: 8, fontSize: 13, color: '#8aacff' }}>
+            <div style={{ fontSize: '0.65rem', color: '#4a5a8a', marginBottom: 2, letterSpacing: 1 }}>멘탈</div>
+            <div style={{ fontWeight: 700 }}>{m >= 0 ? '+' : ''}{m}</div>
+          </div>
+          <div style={{ padding: '0.5rem 1.1rem', background: 'rgba(80,200,180,0.1)', border: '1px solid rgba(80,200,180,0.2)', borderRadius: 8, fontSize: 13, color: '#6adfc8' }}>
+            <div style={{ fontSize: '0.65rem', color: '#3a6a5a', marginBottom: 2, letterSpacing: 1 }}>팀유대</div>
+            <div style={{ fontWeight: 700 }}>{t >= 0 ? '+' : ''}{t}</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
           <button onClick={restart} style={{ padding: '0.65rem 2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.25)', color: '#dbe8ff', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
             처음부터
           </button>
-          <button onClick={toggleBgm} style={{ padding: '0.65rem 1rem', background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: bgmOn ? '#6a8fff' : '#555', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
-            {bgmOn ? '♪ ON' : '♪ OFF'}
+          <button onClick={toggleBgm} style={{ padding: '0.65rem 1rem', background: bgmOn ? 'rgba(60,90,200,0.3)' : 'rgba(40,40,50,0.5)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, color: bgmOn ? '#8aacff' : '#555', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
+            {bgmOn ? '♪ BGM ON' : '♪ BGM OFF'}
           </button>
         </div>
       </div>
@@ -234,6 +276,26 @@ export default function NovelPage() {
         {state.chars.map(ch => (
           <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} style={getCharStyle(ch.pos)} />
         ))}
+
+        {/* ── TOP-LEFT: Stats box ── */}
+        <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6, pointerEvents: 'none' }}>
+          <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+            <div style={{ fontSize: '0.55rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
+          </div>
+          <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+            <div style={{ fontSize: '0.55rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
+          </div>
+        </div>
+
+        {/* ── TOP-RIGHT: BGM button ── */}
+        <button
+          onClick={e => { e.stopPropagation(); toggleBgm(); }}
+          style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', background: bgmOn ? 'rgba(30,55,140,0.75)' : 'rgba(20,20,30,0.75)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, borderRadius: 6, color: bgmOn ? '#8aacff' : '#555', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.05em', backdropFilter: 'blur(4px)', lineHeight: 1.4 }}
+        >
+          {bgmOn ? '♪ ON' : '♪ OFF'}
+        </button>
 
         {/* Dialogue box */}
         {currentBeat?.kind !== 'choice' && (
@@ -269,16 +331,6 @@ export default function NovelPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Status bar */}
-      <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', alignItems: 'center', marginTop: 6, fontSize: 11, color: '#4a5a8a' }}>
-        <button
-          onClick={toggleBgm}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: bgmOn ? '#6a8fff' : '#444', padding: 0, letterSpacing: 1 }}
-        >{bgmOn ? '♪ BGM ON' : '♪ BGM OFF'}</button>
-        <span>멘탈 {state.vars.mentality >= 0 ? '+' : ''}{state.vars.mentality}</span>
-        <span>팀유대 +{state.vars.team_bond}</span>
       </div>
     </div>
   );
