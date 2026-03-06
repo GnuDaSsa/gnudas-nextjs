@@ -13,7 +13,12 @@ interface GameState {
   bg: string | null;
   ended: boolean;
   endingText: string;
+  items: string[];
 }
+
+const ITEM_NAMES: Record<string, string> = {
+  mystery_key: '이름 모를 열쇠',
+};
 
 function applyEffects(vars: Vars, e: { mentality?: number; team_bond?: number }): Vars {
   return { mentality: vars.mentality + (e.mentality || 0), team_bond: vars.team_bond + (e.team_bond || 0) };
@@ -28,26 +33,26 @@ function updateChars(current: CharDisplay[], incoming: CharDisplay[]): CharDispl
   return next;
 }
 
-function processToInteractive(scene: string, beatIdx: number, vars: Vars, chars: CharDisplay[], bg: string | null): GameState {
-  let s = scene, i = beatIdx, v = vars, c = chars, b = bg;
+function processToInteractive(scene: string, beatIdx: number, vars: Vars, chars: CharDisplay[], bg: string | null, items: string[]): GameState {
+  let s = scene, i = beatIdx, v = vars, c = chars, b = bg, it = items;
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const sd = STORY[s];
-    if (!sd) return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '' };
+    if (!sd) return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '', items: it };
     if (i >= sd.beats.length) {
       if (sd.next) {
         // 엔딩 분기: ending_branch 씬에서 변수로 엔딩 결정
         if (sd.next === 'ending_branch') {
           const m = v.mentality, t = v.team_bond;
-          if (m >= 2 && t >= 3)      { s = 'ending_growth';   }
-          else if (m < 0 && t >= 3)  { s = 'ending_team';     }
-          else if (m >= 2 && t < 2)  { s = 'ending_solo';     }
+          if (m >= 2 && t >= 2)      { s = 'ending_growth';   }
+          else if (m <= 0 && t >= 2) { s = 'ending_team';     }
+          else if (m >= 2 && t <= 0) { s = 'ending_solo';     }
           else                       { s = 'ending_burnout';  }
           i = 0; continue;
         }
         s = sd.next; i = 0; continue;
       }
-      return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '' };
+      return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: '', items: it };
     }
     const beat = sd.beats[i];
     if (beat.kind === 'bg')      { b = beat.name; i++; continue; }
@@ -55,12 +60,14 @@ function processToInteractive(scene: string, beatIdx: number, vars: Vars, chars:
     if (beat.kind === 'hide')    { c = c.filter(ch => !beat.ids.includes(ch.id)); i++; continue; }
     if (beat.kind === 'hideAll') { c = []; i++; continue; }
     if (beat.kind === 'effects') { v = applyEffects(v, beat); i++; continue; }
-    if (beat.kind === 'ending')  { return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: beat.text }; }
-    return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: false, endingText: '' };
+    if (beat.kind === 'item')    { if (!it.includes(beat.itemId)) it = [...it, beat.itemId]; i++; continue; }
+    if (beat.kind === 'ending')  { return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: true, endingText: beat.text, items: it }; }
+    // narration, dialogue, choice, photo — stop and return
+    return { scene: s, beatIdx: i, vars: v, chars: c, bg: b, ended: false, endingText: '', items: it };
   }
 }
 
-const INIT = processToInteractive('start', 0, { mentality: 0, team_bond: 0 }, [], null);
+const INIT = processToInteractive('start', 0, { mentality: 0, team_bond: 0 }, [], null, []);
 
 function getCharStyle(pos: Position, id?: string): React.CSSProperties {
   const isSmallCaller = id === 'caller_ice' || id === 'caller_spring';
@@ -88,7 +95,7 @@ const BGM3_SCENES = new Set([
 ]);
 const BGM2_SCENES = new Set([
   'transfer_end', 'ending_branch',
-  'ending_growth', 'ending_team', 'ending_solo', 'ending_burnout',
+  'ending_growth', 'ending_growth_key', 'ending_team', 'ending_solo', 'ending_burnout',
 ]);
 function getBgmTrack(scene: string, ended: boolean): 1 | 2 | 3 {
   if (ended || BGM2_SCENES.has(scene)) return 2;
@@ -102,11 +109,13 @@ export default function NovelPage() {
   const [bgmOn, setBgmOn] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
+  const [itemNotif, setItemNotif] = useState<string | null>(null);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
   const bgm3Ref = useRef<HTMLAudioElement | null>(null);
   const startedRef = useRef(false);
   const currentTrackRef = useRef(0);
+  const prevItemsRef = useRef<string[]>([]);
 
   // Init audio elements once
   useEffect(() => {
@@ -129,6 +138,21 @@ export default function NovelPage() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Item toast detection
+  useEffect(() => {
+    const prev = prevItemsRef.current;
+    const curr = state.items;
+    const newItems = curr.filter(id => !prev.includes(id));
+    if (newItems.length > 0) {
+      const name = ITEM_NAMES[newItems[0]] || newItems[0];
+      setItemNotif(name);
+      const t = setTimeout(() => setItemNotif(null), 3800);
+      prevItemsRef.current = curr;
+      return () => clearTimeout(t);
+    }
+    prevItemsRef.current = curr;
+  }, [state.items]);
 
   // Switch BGM based on scene — always restart from beginning on track change
   useEffect(() => {
@@ -195,7 +219,7 @@ export default function NovelPage() {
       if (prev.ended) return prev;
       const beat = STORY[prev.scene]?.beats[prev.beatIdx];
       if (!beat || beat.kind === 'choice') return prev;
-      return processToInteractive(prev.scene, prev.beatIdx + 1, prev.vars, prev.chars, prev.bg);
+      return processToInteractive(prev.scene, prev.beatIdx + 1, prev.vars, prev.chars, prev.bg, prev.items);
     });
     setTextKey(k => k + 1);
   }, []);
@@ -206,8 +230,13 @@ export default function NovelPage() {
       if (!beat || beat.kind !== 'choice') return prev;
       const opt = beat.options[idx];
       const newVars = opt.effects ? applyEffects(prev.vars, opt.effects) : prev.vars;
-      return processToInteractive(opt.jump, 0, newVars, prev.chars, prev.bg);
+      return processToInteractive(opt.jump, 0, newVars, prev.chars, prev.bg, prev.items);
     });
+    setTextKey(k => k + 1);
+  }, []);
+
+  const useKey = useCallback(() => {
+    setState(prev => processToInteractive('ending_growth_key', 0, prev.vars, [], prev.bg, prev.items));
     setTextKey(k => k + 1);
   }, []);
 
@@ -232,6 +261,8 @@ export default function NovelPage() {
   const currentBeat = STORY[state.scene]?.beats[state.beatIdx];
   const m = state.vars.mentality;
   const t = state.vars.team_bond;
+  const hasKey = state.items.includes('mystery_key');
+  const showKeyPopup = state.ended && state.scene === 'ending_growth' && hasKey;
 
   /* ── START SCREEN ── */
   if (!gameStarted) {
@@ -269,6 +300,7 @@ export default function NovelPage() {
         @keyframes vnFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
         @keyframes rotateBounce { 0%,100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
+        @keyframes itemPop { 0% { opacity:0; transform: translate(-50%,-50%) scale(0.85); } 15% { opacity:1; transform: translate(-50%,-50%) scale(1.04); } 25% { transform: translate(-50%,-50%) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.95); } }
       `}</style>
 
       {/* Portrait rotation prompt — covers everything */}
@@ -298,6 +330,23 @@ export default function NovelPage() {
               <div style={{ fontWeight: 700 }}>{t >= 0 ? '+' : ''}{t}</div>
             </div>
           </div>
+
+          {/* Key use popup — only for ending_growth with the key */}
+          {showKeyPopup && (
+            <div style={{ marginTop: 8, padding: '14px 20px', background: 'rgba(10,20,60,0.92)', border: '1px solid rgba(180,160,80,0.5)', borderRadius: 10, maxWidth: 320, backdropFilter: 'blur(6px)' }}>
+              <div style={{ fontSize: '0.7rem', color: '#c8a83a', letterSpacing: '0.15em', marginBottom: 6 }}>🗝 아이템</div>
+              <div style={{ fontSize: '0.9rem', color: '#f0e8c0', marginBottom: 10 }}>이름 모를 열쇠를 사용하시겠습니까?</div>
+              <button
+                onClick={useKey}
+                style={{ padding: '0.5rem 1.4rem', background: 'rgba(180,150,40,0.25)', border: '1px solid rgba(200,170,60,0.6)', color: '#f0d870', borderRadius: 7, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700 }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(180,150,40,0.45)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(180,150,40,0.25)')}
+              >
+                사용
+              </button>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
             <button onClick={restart} style={{ padding: '0.65rem 2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.25)', color: '#dbe8ff', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
               처음부터
@@ -310,8 +359,8 @@ export default function NovelPage() {
       ) : (
         /* ── GAME SCREEN — fills screen with letterboxing ── */
         <div
-          style={{ position: 'relative', width: 'min(100vw, calc(100vh * 16 / 9))', aspectRatio: '16/9', overflow: 'hidden', background: '#000', cursor: currentBeat?.kind === 'choice' ? 'default' : 'pointer' }}
-          onClick={currentBeat?.kind !== 'choice' ? advance : undefined}
+          style={{ position: 'relative', width: 'min(100vw, calc(100vh * 16 / 9))', aspectRatio: '16/9', overflow: 'hidden', background: '#000', cursor: (currentBeat?.kind === 'choice' || currentBeat?.kind === 'photo') ? 'default' : 'pointer' }}
+          onClick={(currentBeat?.kind !== 'choice' && currentBeat?.kind !== 'photo') ? advance : undefined}
         >
           {/* Background */}
           {state.bg
@@ -325,35 +374,59 @@ export default function NovelPage() {
             <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} style={getCharStyle(ch.pos, ch.id)} />
           ))}
 
+          {/* Item acquisition popup */}
+          {itemNotif && (
+            <div style={{ position: 'absolute', top: '42%', left: '50%', zIndex: 15, pointerEvents: 'none', animation: 'itemPop 3.8s ease forwards' }}>
+              <div style={{ background: 'linear-gradient(160deg,rgba(18,14,6,0.97),rgba(28,22,4,0.97))', border: '1px solid rgba(210,175,60,0.75)', borderRadius: 12, padding: '18px 28px', textAlign: 'center', boxShadow: '0 0 32px rgba(180,150,30,0.3), 0 8px 24px rgba(0,0,0,0.7)', minWidth: 200 }}>
+                <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>🗝</div>
+                <div style={{ fontSize: '0.68rem', color: '#a07830', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>아이템 획득</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f0d870', letterSpacing: '0.05em' }}>[{itemNotif}]</div>
+              </div>
+            </div>
+          )}
+
           {/* TOP-LEFT: Stats box */}
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6, pointerEvents: 'none' }}>
             <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
-              <div style={{ fontSize: '0.55rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
+              <div style={{ fontSize: '0.67rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
+              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
             </div>
             <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
-              <div style={{ fontSize: '0.55rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
+              <div style={{ fontSize: '0.67rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
+              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
             </div>
           </div>
 
           {/* TOP-RIGHT: BGM button */}
           <button
             onClick={e => { e.stopPropagation(); toggleBgm(); }}
-            style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', background: bgmOn ? 'rgba(30,55,140,0.75)' : 'rgba(20,20,30,0.75)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, borderRadius: 6, color: bgmOn ? '#8aacff' : '#555', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600, backdropFilter: 'blur(4px)', lineHeight: 1.4 }}
+            style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', background: bgmOn ? 'rgba(30,55,140,0.75)' : 'rgba(20,20,30,0.75)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, borderRadius: 6, color: bgmOn ? '#8aacff' : '#555', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, backdropFilter: 'blur(4px)', lineHeight: 1.4 }}
           >
             {bgmOn ? '♪ ON' : '♪ OFF'}
           </button>
 
+          {/* Photo overlay */}
+          {currentBeat?.kind === 'photo' && (
+            <div
+              style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.75)', cursor: 'pointer' }}
+              onClick={advance}
+            >
+              <div style={{ position: 'relative', maxWidth: '70%', maxHeight: '80%' }}>
+                <img src={currentBeat.src} alt="인생네컷" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 6, boxShadow: '0 8px 40px rgba(0,0,0,0.8)' }} />
+                <div style={{ position: 'absolute', bottom: -28, left: 0, right: 0, textAlign: 'center', fontFamily: 'monospace', fontSize: '0.68rem', color: '#666', letterSpacing: '0.1em' }}>클릭하여 계속</div>
+              </div>
+            </div>
+          )}
+
           {/* Dialogue box */}
-          {currentBeat?.kind !== 'choice' && (
+          {currentBeat?.kind !== 'choice' && currentBeat?.kind !== 'photo' && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(4,8,28,0.91)', borderTop: '1px solid rgba(80,130,255,0.2)', padding: '14px 22px 16px', minHeight: '21%' }}>
               {currentBeat?.kind === 'dialogue' && (
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: 5, color: CHAR_INFO[currentBeat.who]?.color || '#fff', letterSpacing: 1.5 }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 5, color: CHAR_INFO[currentBeat.who]?.color || '#fff', letterSpacing: 1.5 }}>
                   {CHAR_INFO[currentBeat.who]?.name}
                 </div>
               )}
-              <div key={textKey} style={{ fontSize: '0.95rem', color: '#eaf1ff', lineHeight: 1.9, animation: 'vnFadeIn 0.2s ease' }}>
+              <div key={textKey} style={{ fontSize: '1.07rem', color: '#eaf1ff', lineHeight: 1.9, animation: 'vnFadeIn 0.2s ease' }}>
                 {(currentBeat?.kind === 'narration' || currentBeat?.kind === 'dialogue') ? currentBeat.text : null}
               </div>
               <div style={{ position: 'absolute', bottom: 8, right: 14, width: 7, height: 7, borderBottom: '2px solid #6a8fff', borderRight: '2px solid #6a8fff', transform: 'rotate(45deg)', animation: 'blink 1.2s infinite' }} />
@@ -368,7 +441,7 @@ export default function NovelPage() {
                   <button
                     key={i}
                     onClick={() => choose(i)}
-                    style={{ padding: '0.75rem 1.1rem', background: 'rgba(15,28,75,0.92)', border: '1px solid rgba(90,140,255,0.4)', color: '#d8e8ff', borderRadius: 8, cursor: 'pointer', fontSize: '0.88rem', lineHeight: 1.6, textAlign: 'center' }}
+                    style={{ padding: '0.75rem 1.1rem', background: 'rgba(15,28,75,0.92)', border: '1px solid rgba(90,140,255,0.4)', color: '#d8e8ff', borderRadius: 8, cursor: 'pointer', fontSize: '1rem', lineHeight: 1.6, textAlign: 'center' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(35,60,150,0.92)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'rgba(15,28,75,0.92)')}
                   >

@@ -15,6 +15,8 @@ export type Beat =
   | { kind: 'hide'; ids: CharId[] }
   | { kind: 'hideAll' }
   | { kind: 'effects'; mentality?: number; team_bond?: number }
+  | { kind: 'item'; name: string; itemId: string }
+  | { kind: 'photo'; src: string }
   | { kind: 'choice'; options: { text: string; effects?: { mentality?: number; team_bond?: number }; jump: string }[] }
   | { kind: 'ending'; text: string };
 
@@ -108,7 +110,7 @@ export const STORY: Record<string, Scene> = {
       { kind: 'narration', text: '그리고 맨 끝에 나.' },
       { kind: 'hide', ids: ['chief'] },
       { kind: 'show', chars: [{ id: 'manager', pos: 'left' }] },
-      { kind: 'dialogue', who: 'manager', text: '건설과는 처음부터 설명서가 친절한 곳은 아니야.' },
+      { kind: 'dialogue', who: 'manager', text: '밥 많이 먹어라. 계속 배고플테니까.' },
       { kind: 'hide', ids: ['manager'] },
       { kind: 'show', chars: [{ id: 'deputy', pos: 'left' }] },
       { kind: 'dialogue', who: 'deputy', text: '이쪽 와서 앉아요. 오늘부터 여기 자리 써요.' },
@@ -121,6 +123,7 @@ export const STORY: Record<string, Scene> = {
       { kind: 'hide', ids: ['junior_two'] },
       { kind: 'narration', text: '여기저기 인사를 드리고 안내받은 자리에 앉았다.' },
       { kind: 'narration', text: '책상에는 먼지가 수북했고, 모니터 옆엔 이름 모를 열쇠 하나가 굴러다니고 있었다.' },
+      { kind: 'item', name: '이름 모를 열쇠', itemId: 'mystery_key' },
       { kind: 'show', chars: [{ id: 'protagonist', pos: 'right' }] },
       { kind: 'dialogue', who: 'protagonist', text: '이게 뭐지...' },
       { kind: 'narration', text: '그 찰나, 전화가 울렸다.' },
@@ -147,9 +150,9 @@ export const STORY: Record<string, Scene> = {
       { kind: 'dialogue', who: 'protagonist', text: '네...' },
       { kind: 'narration', text: '근데 진짜 하나도 무슨 소린지 모르겠다.' },
       { kind: 'choice', options: [
-        { text: '일단 아는 척하며 메모부터 정리한다', effects: { mentality: 1, team_bond: 1 }, jump: 'early_days' },
+        { text: '일단 아는 척하며 메모부터 정리한다', effects: { mentality: 1 }, jump: 'early_days' },
         { text: '솔직하게 잘 모르겠다고 다시 묻는다', effects: { team_bond: 2 }, jump: 'early_days' },
-        { text: '인수인계 파일을 혼자 밤새 분석해보기로 한다', effects: { mentality: 1 }, jump: 'early_days' },
+        { text: '인수인계 파일을 혼자 밤새 분석해보기로 한다', effects: { mentality: 2 }, jump: 'early_days' },
       ]},
     ],
   },
@@ -194,8 +197,8 @@ export const STORY: Record<string, Scene> = {
       { kind: 'narration', text: '웃자고 한 말인 건 알았다. 그런데 웃음이 나오지 않았다.' },
       { kind: 'hide', ids: ['deputy'] },
       { kind: 'choice', options: [
-        { text: '투덜거리면서도 현장 흐름을 몸으로 익힌다', effects: { mentality: 1 }, jump: 'winter_relief' },
-        { text: '긴장한 채로 매뉴얼을 반복해서 읽으며 버틴다', effects: { team_bond: 1 }, jump: 'winter_relief' },
+        { text: '투덜거리면서도 현장 흐름을 몸으로 익힌다', effects: { mentality: 2, team_bond: -1 }, jump: 'winter_relief' },
+        { text: '긴장한 채로 매뉴얼을 반복해서 읽으며 버틴다', effects: { mentality: -1, team_bond: 2 }, jump: 'winter_relief' },
         { text: '새벽 출동마다 선배들 곁에 붙어 질문을 쏟아낸다', effects: { mentality: 1, team_bond: 1 }, jump: 'winter_relief' },
       ]},
     ],
@@ -247,9 +250,9 @@ export const STORY: Record<string, Scene> = {
       { kind: 'narration', text: '틀린 말이 아니었다. 그리고 맞는 말도 아니었다.' },
       { kind: 'narration', text: '어떻게 할까.' },
       { kind: 'choice', options: [
-        { text: '영조물 배상 책임에 대해 설명한다 (관리하자 없음)', effects: { mentality: -1 }, jump: 'choice_explain' },
-        { text: '국가배상법에 따른 절차를 안내한다', effects: { mentality: -1, team_bond: 1 }, jump: 'choice_empathy' },
-        { text: '배상 대상이 아니라고 단호하게 말한다', effects: { mentality: 1, team_bond: -1 }, jump: 'choice_escalate' },
+        { text: '영조물 배상 책임에 대해 설명한다 (관리하자 없음)', effects: { mentality: -1, team_bond: -1 }, jump: 'choice_explain' },
+        { text: '국가배상법에 따른 절차를 안내한다', effects: { mentality: 1, team_bond: 1 }, jump: 'choice_empathy' },
+        { text: '배상 대상이 아니라고 단호하게 말한다', effects: { mentality: 2 }, jump: 'choice_escalate' },
       ]},
     ],
   },
@@ -334,7 +337,7 @@ export const STORY: Record<string, Scene> = {
       { kind: 'choice', options: [
         { text: '규정을 내세워 끝까지 안 된다고 버틴다', effects: { mentality: 1, team_bond: -1 }, jump: 'spring_defend' },
         { text: '왜 안 되는지 차분히 설명하고, 가능한 다른 방법을 함께 찾아본다', effects: { mentality: -1, team_bond: 1 }, jump: 'spring_defend' },
-        { text: '민원이 너무 악질이다. 법 취지는 맞지 않지만 어떻게든 대안을 찾아 마무리해버린다', effects: { mentality: -1 }, jump: 'spring_yield' },
+        { text: '민원이 너무 악질이다. 법 취지는 맞지 않지만 어떻게든 대안을 찾아 마무리해버린다', effects: { mentality: 1, team_bond: 1 }, jump: 'spring_yield' },
       ]},
     ],
   },
@@ -437,6 +440,22 @@ export const STORY: Record<string, Scene> = {
       { kind: 'narration', text: '힘들었지만, 단단해졌다.' },
       { kind: 'narration', text: '그리고 내일도 아마, 전화벨 소리와 함께 공무원 인생은 계속될 것이다.' },
       { kind: 'ending', text: '성장 엔딩 — 1년 차 토목직, 단단해지다' },
+    ],
+  },
+
+  // ── 엔딩 1-B: 성장 + 열쇠 사용 ───────────────────────────────────
+  ending_growth_key: {
+    beats: [
+      { kind: 'hideAll' },
+      { kind: 'bg', name: 'office_evening' },
+      { kind: 'narration', text: '바빠서 한 번도 열어보지 못했던 캐비닛을 열었다.' },
+      { kind: 'narration', text: '오래된 잠금장치가 툭, 하고 열렸다.' },
+      { kind: 'photo', src: '/novel/items/life4cut.jpg' },
+      { kind: 'narration', text: '첫 회식 때 찍었던 인생네컷이었다.' },
+      { kind: 'narration', text: '그때의 우리는 다들 어색하게 웃고 있었다.' },
+      { kind: 'narration', text: '힘들지만 낭만있었다.' },
+      { kind: 'narration', text: '그리고 내일도 아마, 전화벨 소리와 함께 공무원 인생은 계속될 것이다.' },
+      { kind: 'ending', text: '성장 엔딩 — 힘들지만 낭만있었다' },
     ],
   },
 
