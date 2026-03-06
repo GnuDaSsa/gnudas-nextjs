@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { STORY, CHAR_INFO, BG_URL, CHAR_URL } from './story';
 import type { CharId, CharDisplay, Position } from './story';
 
@@ -75,9 +75,53 @@ function getCharStyle(pos: Position): React.CSSProperties {
   return common;
 }
 
+// Scenes from which bgm2 plays
+const BGM2_SCENES = new Set([
+  'transfer_end', 'spring_start', 'spring_work', 'spring_complaint',
+  'choice_explain', 'choice_empathy', 'choice_escalate',
+  'spring_sign', 'spring_final', 'ending_branch',
+  'ending_growth', 'ending_team', 'ending_solo', 'ending_burnout',
+]);
+
 export default function NovelPage() {
   const [state, setState] = useState<GameState>(INIT);
   const [textKey, setTextKey] = useState(0);
+  const bgm1Ref = useRef<HTMLAudioElement | null>(null);
+  const bgm2Ref = useRef<HTMLAudioElement | null>(null);
+
+  // Init audio elements once
+  useEffect(() => {
+    const a1 = new Audio('/novel/bgm.mp3');
+    a1.loop = true; a1.volume = 0.35;
+    bgm1Ref.current = a1;
+    const a2 = new Audio('/novel/bgm2.mp3');
+    a2.loop = true; a2.volume = 0.35;
+    bgm2Ref.current = a2;
+    // Start bgm1 on first user interaction
+    const start = () => { a1.play().catch(() => {}); document.removeEventListener('click', start); };
+    document.addEventListener('click', start);
+    return () => {
+      document.removeEventListener('click', start);
+      a1.pause(); a2.pause();
+    };
+  }, []);
+
+  // Switch BGM based on scene
+  useEffect(() => {
+    const a1 = bgm1Ref.current;
+    const a2 = bgm2Ref.current;
+    if (!a1 || !a2) return;
+    const useBgm2 = BGM2_SCENES.has(state.scene) || state.ended;
+    if (useBgm2) {
+      if (!a2.paused) return;
+      a1.pause();
+      a2.play().catch(() => {});
+    } else {
+      if (!a1.paused) return;
+      a2.pause();
+      a1.play().catch(() => {});
+    }
+  }, [state.scene, state.ended]);
 
   const advance = useCallback(() => {
     setState(prev => {
