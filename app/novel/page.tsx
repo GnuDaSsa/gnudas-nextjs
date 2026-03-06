@@ -111,6 +111,8 @@ export default function NovelPage() {
   const [isMobileGame, setIsMobileGame] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [itemNotif, setItemNotif] = useState<string | null>(null);
+  const [btnHover, setBtnHover] = useState(false);
+  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 });
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
   const bgm3Ref = useRef<HTMLAudioElement | null>(null);
@@ -275,28 +277,89 @@ export default function NovelPage() {
 
   /* ── START SCREEN ── */
   if (!gameStarted) {
+    const dx = (mouse.x - 0.5);
+    const dy = (mouse.y - 0.5);
     return (
       <div style={{ width: '100%', maxWidth: 900, margin: '0 auto 2rem' }}>
         <style>{`
-          @keyframes titleFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes startPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(106,143,255,0.4); } 50% { box-shadow: 0 0 0 8px rgba(106,143,255,0); } }
+          @keyframes titleFloat  { 0%,100% { transform: translateY(0px);  } 50% { transform: translateY(-7px);  } }
+          @keyframes subFloat    { 0%,100% { transform: translateY(0px);  } 50% { transform: translateY(-4px);  } }
+          @keyframes bgBreathe   { 0%,100% { transform: scale(1.06) translate(0px,0px); } 50% { transform: scale(1.09) translate(0px,-3px); } }
+          @keyframes btnSketch   { 0%,100% { box-shadow: 3px 3px 0 #111; } 50% { box-shadow: 4px 4px 0 #111; } }
+          @keyframes fadeUp      { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
         `}</style>
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', background: '#050a1a', borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 60%, rgba(30,60,160,0.25) 0%, transparent 70%)' }} />
-          <div style={{ animation: 'titleFadeIn 0.8s ease both', textAlign: 'center', position: 'relative' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#4a6aaa', letterSpacing: '0.3em', marginBottom: '1.2rem', textTransform: 'uppercase' }}>Visual Novel</div>
-            <div style={{ fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', fontWeight: 900, color: '#dce8ff', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '0.4rem' }}>공무원 1년차</div>
-            <div style={{ fontSize: 'clamp(0.8rem, 2vw, 1.05rem)', color: '#6a8aaa', letterSpacing: '0.12em', marginBottom: '2.8rem' }}>토목직 첫 발령 이야기</div>
+        <div
+          style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderRadius: 4, background: '#e8e4dc', cursor: 'default' }}
+          onMouseMove={e => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setMouse({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+          }}
+          onMouseLeave={() => setMouse({ x: 0.5, y: 0.5 })}
+        >
+          {/* 배경 이미지 — parallax */}
+          <div style={{
+            position: 'absolute', inset: '-6%',
+            backgroundImage: `url('/novel/start_bg.jpg')`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            transform: `translate(${dx * -18}px, ${dy * -12}px) scale(1.06)`,
+            transition: 'transform 0.25s ease-out',
+          }} />
+          {/* 밝기 오버레이 */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(235,230,220,0.18)' }} />
+
+          {/* 콘텐츠 레이어 */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 0,
+          }}>
+            {/* The Visual Novel 뱃지 */}
+            <div style={{
+              transform: `translate(${dx * 4}px, ${dy * 3}px)`,
+              transition: 'transform 0.3s ease-out',
+              animation: 'subFloat 4s ease-in-out infinite',
+              border: '2px solid #111', padding: '3px 16px', marginBottom: 'clamp(8px,2vw,14px)',
+              fontFamily: 'serif', fontSize: 'clamp(0.62rem,1.5vw,0.85rem)', fontWeight: 700,
+              background: 'rgba(255,255,255,0.82)', color: '#111', letterSpacing: '0.12em',
+              opacity: 0, animationFillMode: 'forwards',
+            }}
+              onAnimationStart={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+            >The Visual Novel</div>
+
+            {/* 메인 타이틀 */}
+            <div style={{
+              transform: `translate(${dx * 8}px, ${dy * 5}px)`,
+              transition: 'transform 0.25s ease-out',
+              animation: 'titleFloat 3.5s ease-in-out infinite',
+              fontSize: 'clamp(2.2rem,6.5vw,4.8rem)', fontWeight: 900, color: '#0e0e0e',
+              textAlign: 'center', lineHeight: 1.08,
+              textShadow: '2px 2px 0 rgba(0,0,0,0.08)',
+              letterSpacing: '-0.01em',
+            }}>나는 지방직<br />공무원이다</div>
+
+            {/* 시작하기 버튼 */}
             <button
               onClick={startGame}
-              style={{ padding: '0.75rem 2.8rem', background: 'rgba(30,55,160,0.7)', border: '1px solid rgba(106,143,255,0.6)', color: '#c8deff', borderRadius: 8, cursor: 'pointer', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.15em', animation: 'startPulse 2s ease infinite' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(50,85,210,0.85)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(30,55,160,0.7)')}
-            >
-              시작
-            </button>
+              onMouseEnter={() => setBtnHover(true)}
+              onMouseLeave={() => setBtnHover(false)}
+              style={{
+                marginTop: 'clamp(1.2rem,3.5vw,2.2rem)',
+                padding: 'clamp(0.55rem,1.4vw,0.85rem) clamp(1.8rem,5vw,3.2rem)',
+                background: btnHover ? '#111' : 'rgba(255,255,255,0.88)',
+                border: '2.5px solid #111',
+                color: btnHover ? '#fff' : '#111',
+                fontSize: 'clamp(0.85rem,2vw,1.05rem)',
+                fontWeight: 700, cursor: 'pointer',
+                letterSpacing: '0.18em',
+                boxShadow: btnHover ? '5px 5px 0 #333' : '3px 3px 0 #333',
+                transform: btnHover ? 'translate(-2px,-2px) scale(1.03)' : 'translate(0,0) scale(1)',
+                transition: 'all 0.13s ease',
+                animation: 'fadeUp 0.7s 0.3s ease both',
+              }}
+            >시작하기</button>
           </div>
-          <div style={{ position: 'absolute', bottom: 14, fontFamily: 'monospace', fontSize: '0.62rem', color: '#2a3a5a', letterSpacing: '0.1em' }}>© 2026 DLC — AI Club</div>
+
+          <div style={{ position: 'absolute', bottom: 10, right: 14, fontFamily: 'monospace', fontSize: '0.58rem', color: 'rgba(0,0,0,0.3)', letterSpacing: '0.08em' }}>© 2026 DLC — AI Club</div>
         </div>
       </div>
     );
