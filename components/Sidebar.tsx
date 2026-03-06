@@ -9,15 +9,14 @@ const NAV_ITEMS = [
   { num: '00', label: 'Home', href: '/' },
   { num: '01', label: 'MBTI 검사기', href: '/mbti' },
   { num: '02', label: '테토에겐 테스트', href: '/teto' },
-  { num: '03', label: '점검표 생성', href: '/checklist' },
-  { num: '04', label: '보도자료 생성기', href: '/press' },
-  { num: '05', label: '이미지 프롬프트', href: '/img-prompt' },
-  { num: '06', label: '녹음 변환·요약', href: '/record' },
+  { num: '03', label: '보도자료 생성기', href: '/press' },
+  { num: '04', label: '이미지 프롬프트', href: '/img-prompt' },
+  { num: '05', label: '녹음 변환·요약', href: '/record' },
   { label: 'divider', type: 'divider' },
   { label: 'Community', type: 'section' },
-  { num: '07', label: '꿀팁 공유', href: '/tips' },
-  { num: '08', label: '아이디어 제안소', href: '/ideas' },
-  { num: '09', label: '공무원 비주얼노벨', href: '/novel' },
+  { num: '06', label: '꿀팁 공유', href: '/tips' },
+  { num: '07', label: '아이디어 제안소', href: '/ideas' },
+  { num: '08', label: '공무원 비주얼노벨', href: '/novel' },
 ];
 
 export default function Sidebar() {
