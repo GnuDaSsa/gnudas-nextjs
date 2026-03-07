@@ -113,6 +113,8 @@ export default function NovelPage() {
   const [itemNotif, setItemNotif] = useState<string | null>(null);
   const [btnHover, setBtnHover] = useState(false);
   const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 });
+  const [statDelta, setStatDelta] = useState<{ m?: number; t?: number; key: number } | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const bgm1Ref = useRef<HTMLAudioElement | null>(null);
   const bgm2Ref = useRef<HTMLAudioElement | null>(null);
   const bgm3Ref = useRef<HTMLAudioElement | null>(null);
@@ -194,6 +196,24 @@ export default function NovelPage() {
     });
   }, []);
 
+  const playClick = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(900, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.06);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.09);
+    } catch { /* ignore */ }
+  }, []);
+
   const startGame = useCallback(async () => {
     // 모바일에서만 전체화면 + 가로 고정
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -229,15 +249,20 @@ export default function NovelPage() {
   }, []);
 
   const choose = useCallback((idx: number) => {
+    playClick();
     setState(prev => {
       const beat = STORY[prev.scene]?.beats[prev.beatIdx];
       if (!beat || beat.kind !== 'choice') return prev;
       const opt = beat.options[idx];
+      if (opt.effects && (opt.effects.mentality || opt.effects.team_bond)) {
+        setStatDelta({ m: opt.effects.mentality, t: opt.effects.team_bond, key: Date.now() });
+        setTimeout(() => setStatDelta(null), 1600);
+      }
       const newVars = opt.effects ? applyEffects(prev.vars, opt.effects) : prev.vars;
       return processToInteractive(opt.jump, 0, newVars, prev.chars, prev.bg, prev.items);
     });
     setTextKey(k => k + 1);
-  }, []);
+  }, [playClick]);
 
   const useKey = useCallback(() => {
     setState(prev => processToInteractive('ending_growth_key', 0, prev.vars, [], prev.bg, prev.items));
@@ -346,6 +371,7 @@ export default function NovelPage() {
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
         @keyframes rotateBounce { 0%,100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
         @keyframes itemPop { 0% { opacity:0; transform: translate(-50%,-50%) scale(0.85); } 15% { opacity:1; transform: translate(-50%,-50%) scale(1.04); } 25% { transform: translate(-50%,-50%) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform: translate(-50%,-50%) scale(0.95); } }
+        @keyframes statFloat { 0% { opacity:1; transform: translateY(0) scale(1); } 30% { opacity:1; transform: translateY(-10px) scale(1.1); } 100% { opacity:0; transform: translateY(-38px) scale(0.9); } }
       `}</style>
 
       {/* Portrait rotation prompt — 모바일 전용 */}
@@ -448,13 +474,27 @@ export default function NovelPage() {
 
           {/* TOP-LEFT: Stats box */}
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6, pointerEvents: 'none' }}>
-            <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
-              <div style={{ fontSize: '0.67rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
-              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
+            <div style={{ position: 'relative' }}>
+              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+                <div style={{ fontSize: '0.67rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
+                <div style={{ fontSize: '0.94rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
+              </div>
+              {statDelta?.m !== undefined && statDelta.m !== 0 && (
+                <div key={`m-${statDelta.key}`} style={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', fontSize: '0.9rem', fontWeight: 800, color: statDelta.m > 0 ? '#75e8ff' : '#ff7a7a', animation: 'statFloat 1.5s ease forwards', whiteSpace: 'nowrap', textShadow: '0 0 8px rgba(0,0,0,0.9)' }}>
+                  {statDelta.m > 0 ? `+${statDelta.m}` : `${statDelta.m}`}
+                </div>
+              )}
             </div>
-            <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
-              <div style={{ fontSize: '0.67rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
-              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
+            <div style={{ position: 'relative' }}>
+              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+                <div style={{ fontSize: '0.67rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
+                <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
+              </div>
+              {statDelta?.t !== undefined && statDelta.t !== 0 && (
+                <div key={`t-${statDelta.key}`} style={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', fontSize: '0.9rem', fontWeight: 800, color: statDelta.t > 0 ? '#6adfc8' : '#ff7a7a', animation: 'statFloat 1.5s ease forwards', whiteSpace: 'nowrap', textShadow: '0 0 8px rgba(0,0,0,0.9)' }}>
+                  {statDelta.t > 0 ? `+${statDelta.t}` : `${statDelta.t}`}
+                </div>
+              )}
             </div>
           </div>
 
