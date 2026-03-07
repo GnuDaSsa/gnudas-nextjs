@@ -1,5 +1,8 @@
 'use client';
+
 import { useState } from 'react';
+
+import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
 export default function PressPage() {
   const [form, setForm] = useState({ 담당부서: '', 소감주체: '', 담당자: '', 연락처: '', 내용: '' });
@@ -9,7 +12,7 @@ export default function PressPage() {
 
   async function generate() {
     if (!form.담당부서 || !form.내용 || !form.담당자 || !form.연락처) {
-      alert('담당부서/담당자/연락처/핵심내용을 입력해 주세요.');
+      alert('담당부서, 담당자, 연락처, 핵심 내용을 먼저 입력해 주세요.');
       return;
     }
 
@@ -36,200 +39,153 @@ export default function PressPage() {
       }
 
       const titleMatches = full.match(/'([^']+)'/g);
-      if (titleMatches) setTitles(titleMatches.slice(0, 5).map((t) => t.replace(/'/g, '')));
+      if (titleMatches) {
+        setTitles(titleMatches.slice(0, 5).map((title) => title.replace(/'/g, '')));
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto' }}>
-      <style>{`
-        .press-wrap { color:#e5e7eb; }
-        .hero {
-          position: relative;
-          padding: 1.1rem 1.1rem 1.25rem;
-          border-radius: 20px;
-          margin-bottom: 14px;
-          background: linear-gradient(140deg, rgba(19,24,43,.96), rgba(15,18,29,.94));
-          border: 1px solid rgba(255,255,255,.1);
-          overflow: hidden;
-        }
-        .hero::after {
-          content: '';
-          position: absolute;
-          top: -40px;
-          right: -40px;
-          width: 180px;
-          height: 180px;
-          border-radius: 999px;
-          background: radial-gradient(circle, rgba(99,102,241,.45) 0%, rgba(99,102,241,0) 70%);
-          pointer-events: none;
-        }
-        .badge-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-        .badge {
-          display:inline-flex; align-items:center; gap:6px;
-          padding: 5px 10px;
-          border-radius: 999px;
-          background: rgba(255,255,255,.05);
-          border: 1px solid rgba(255,255,255,.11);
-          font-size: .74rem;
-          color: #cbd5e1;
-        }
-        .dot { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 12px rgba(52,211,153,.9); }
-        .title {
-          margin: .65rem 0 .45rem;
-          font-size: clamp(1.55rem, 3vw, 2.15rem);
-          letter-spacing: -.02em;
-          line-height: 1.2;
-          color: #f8fafc;
-          font-weight: 750;
-        }
-        .sub {
-          margin: 0;
-          color: #9ca3af;
-          line-height: 1.65;
-          font-size: .95rem;
-          max-width: 72ch;
-        }
-        .layout { display:grid; grid-template-columns: 1.06fr .94fr; gap: 14px; }
-        .card {
-          border-radius: 18px;
-          border: 1px solid rgba(255,255,255,.1);
-          background: linear-gradient(180deg, rgba(17,20,30,.95), rgba(14,16,23,.95));
-          padding: 1rem;
-        }
-        .label {
-          display:block;
-          font-size:.79rem;
-          color:#9ca3af;
-          margin-bottom:6px;
-          font-weight:600;
-        }
-        .input {
-          width:100%;
-          border-radius: 12px;
-          border: 1px solid rgba(148,163,184,.22);
-          background: rgba(255,255,255,.02);
-          color:#f3f4f6;
-          padding: .7rem .78rem;
-          font-size: .94rem;
-          transition: border-color .15s ease, box-shadow .15s ease;
-          outline: none;
-        }
-        .input:focus {
-          border-color: rgba(99,102,241,.7);
-          box-shadow: 0 0 0 3px rgba(99,102,241,.2);
-        }
-        .three { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top: 10px; }
-        .btn {
-          margin-top: 14px;
-          width: 100%;
-          border: none;
-          border-radius: 12px;
-          padding: .78rem 1rem;
-          font-weight: 700;
-          font-size: .95rem;
-          color: #fff;
-          background: linear-gradient(90deg, #6366f1, #8b5cf6);
-          box-shadow: 0 10px 24px rgba(99,102,241,.28);
-          cursor: pointer;
-        }
-        .btn:disabled { opacity:.6; cursor:not-allowed; }
-        .sec-title { color:#cbd5e1; font-size:.8rem; margin:0 0 8px; text-transform: uppercase; letter-spacing:.06em; }
-        .title-list { margin-bottom: 12px; }
-        .title-item {
-          padding: .56rem .6rem;
-          border-radius: 10px;
-          background: rgba(255,255,255,.03);
-          border: 1px solid rgba(255,255,255,.08);
-          margin-bottom: 7px;
-          color:#e2e8f0;
-          font-size:.92rem;
-        }
-        .result {
-          white-space: pre-wrap;
-          line-height: 1.75;
-          color: #f1f5f9;
-          font-size: .95rem;
-        }
-        .empty {
-          margin:0;
-          color:#9ca3af;
-          line-height:1.6;
-          font-size:.92rem;
-        }
-        @media (max-width: 920px) {
-          .layout, .three { grid-template-columns: 1fr; }
-          .hero { padding: 1rem; }
-          .card { border-radius: 14px; }
-          .title { font-size: 1.75rem; }
-        }
-      `}</style>
+    <ToolShell
+      eyebrow="Public Writing Tool"
+      title="보도자료 생성기"
+      description="사실관계와 전달 구조를 먼저 잡는 실무형 보도자료 초안 도구입니다. 담당 정보와 핵심 문장을 입력하면 제목 후보와 본문 초안을 한 번에 정리합니다."
+      badges={['Fact-first Draft', '공공기관 톤', 'Streaming Response']}
+      meta={[
+        { label: 'Best for', value: '행정·기관 보도자료 초안 작성' },
+        { label: 'Input', value: '담당부서, 담당자, 연락처, 핵심 내용' },
+        { label: 'Output', value: '제목 후보 5개 + 본문 초안' },
+      ]}
+      main={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>기본 정보 입력</h2>
+                <p className={styles.sectionDescription}>
+                  누가 발표하고, 무엇을 왜 알리는지 먼저 정리합니다. 핵심 사실만 명확히 넣을수록 결과 품질이 좋아집니다.
+                </p>
+              </div>
+              <span className={styles.pill}>Step 1</span>
+            </div>
 
-      <div className="press-wrap">
-        <section className="hero">
-          <div className="badge-row">
-            <span className="badge"><span className="dot" /> Live Draft</span>
-            <span className="badge">Public Sector Tone</span>
-            <span className="badge">Fact-first Writing</span>
-          </div>
-          <h1 className="title">보도자료 생성기</h1>
-          <p className="sub">
-            과장된 표현보다 사실관계 중심으로 초안을 만듭니다.
-            담당부서·핵심 내용을 입력하면 바로 실무형 문장으로 정리됩니다.
-          </p>
-        </section>
+            <label className={styles.label}>담당부서</label>
+            <input
+              className={styles.input}
+              value={form.담당부서}
+              onChange={(e) => setForm((prev) => ({ ...prev, 담당부서: e.target.value }))}
+              placeholder="예: 4차산업추진국 AI반도체과"
+            />
 
-        <section className="layout">
-          <div className="card">
-            <label className="label">담당부서</label>
-            <input className="input" value={form.담당부서} onChange={(e)=>setForm((f)=>({...f, 담당부서:e.target.value}))} placeholder="예: 4차산업추진국 AI반도체과" />
-
-            <div className="three">
-              {[['소감주체', '예: 성남시장 홍길동'], ['담당자', '예: 홍길동'], ['연락처', '예: 031-729-0000']].map(([k, ph]) => (
-                <div key={k}>
-                  <label className="label">{k}</label>
-                  <input className="input" value={form[k as keyof typeof form]} onChange={(e)=>setForm((f)=>({...f, [k]: e.target.value}))} placeholder={ph} />
+            <div className={styles.grid3} style={{ marginTop: 14 }}>
+              {[
+                ['소감주체', '예: 성남시장 홍길동'],
+                ['담당자', '예: 홍길동'],
+                ['연락처', '예: 031-729-0000'],
+              ].map(([key, placeholder]) => (
+                <div key={key}>
+                  <label className={styles.label}>{key}</label>
+                  <input
+                    className={styles.input}
+                    value={form[key as keyof typeof form]}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, [key]: e.target.value }))
+                    }
+                    placeholder={placeholder}
+                  />
                 </div>
               ))}
             </div>
 
-            <label className="label" style={{ marginTop: 10 }}>핵심 반영 내용</label>
+            <label className={styles.label} style={{ marginTop: 16 }}>
+              핵심 반영 내용
+            </label>
             <textarea
-              className="input"
-              style={{ minHeight: 170, resize: 'vertical' }}
+              className={styles.textarea}
               value={form.내용}
-              onChange={(e)=>setForm((f)=>({...f, 내용:e.target.value}))}
-              placeholder="무엇을, 언제, 누구에게 제공하는지 구체적으로 입력"
+              onChange={(e) => setForm((prev) => ({ ...prev, 내용: e.target.value }))}
+              placeholder="무엇을, 언제, 누구에게 제공하는지 문장으로 적어 주세요. 예산, 일정, 기대효과가 있으면 함께 넣어 주세요."
             />
 
-            <button className="btn" onClick={generate} disabled={loading}>
-              {loading ? '생성 중...' : '보도자료 초안 생성'}
-            </button>
-          </div>
+            <div className={styles.actions}>
+              <button className={styles.buttonPrimary} onClick={generate} disabled={loading}>
+                {loading ? '초안 생성 중...' : '보도자료 초안 만들기'}
+              </button>
+            </div>
+          </section>
 
-          <div className="card">
-            <p className="sec-title">추천 제목</p>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>본문 초안</h2>
+                <p className={styles.sectionDescription}>
+                  결과는 실무자가 바로 다듬기 좋도록 문장 단위로 정리됩니다.
+                </p>
+              </div>
+              <span className={styles.pill}>Step 2</span>
+            </div>
+
+            {result ? (
+              <div className={styles.resultPanel}>{result.split('보도자료 추천 제목')[0] || result}</div>
+            ) : (
+              <p className={styles.emptyState}>
+                초안을 생성하면 이 영역에 문단형 결과가 표시됩니다.
+              </p>
+            )}
+          </section>
+        </div>
+      }
+      side={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>제목 후보</h2>
+                <p className={styles.sectionDescription}>
+                  첫 문장보다 강한 헤드라인이 필요할 때 바로 비교할 수 있습니다.
+                </p>
+              </div>
+            </div>
+
             {titles.length > 0 ? (
-              <div className="title-list">
-                {titles.map((t, i) => (
-                  <div key={i} className="title-item">{i + 1}. {t}</div>
+              <div className={styles.toolList}>
+                {titles.map((title, index) => (
+                  <div className={styles.toolListItem} key={title}>
+                    <div>
+                      <strong>{index + 1}. {title}</strong>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
-              <p className="empty">생성 후 제목 후보가 이 영역에 표시됩니다.</p>
+              <p className={styles.emptyState}>생성 후 제목 후보 5개가 여기에 표시됩니다.</p>
             )}
+          </section>
 
-            <p className="sec-title" style={{ marginTop: 14 }}>초안 결과</p>
-            {result ? (
-              <div className="result">{result.split('보도자료 추천 제목')[0] || result}</div>
-            ) : (
-              <p className="empty">결과가 이 영역에 표시됩니다.</p>
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>작성 가이드</h2>
+                <p className={styles.sectionDescription}>완성도를 높이는 입력 팁입니다.</p>
+              </div>
+            </div>
+
+            <div className={styles.splitCard}>
+              {[
+                '핵심 내용은 한 문단보다 3~5개 사실 포인트로 넣는 편이 좋습니다.',
+                '행사명, 일정, 대상, 기대효과가 들어가면 제목 품질이 확실히 올라갑니다.',
+                '소감 주체가 비어 있으면 인용문이 약해질 수 있습니다.',
+              ].map((item) => (
+                <div className={styles.splitItem} key={item}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      }
+    />
   );
 }

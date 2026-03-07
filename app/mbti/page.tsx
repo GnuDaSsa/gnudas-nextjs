@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+
+import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
 // ─── 질문 풀: [질문, 타입] ────────────────────────────────────────────────────
 type QType = 'E' | 'I' | 'S' | 'N' | 'T' | 'F' | 'J' | 'P';
@@ -335,115 +337,17 @@ function calcMbti(answers: Record<number, number>, questions: Question[]): {
   return { mbti, pcts };
 }
 
-// ─── 스타일 상수 ──────────────────────────────────────────────────────────────
-const S = {
-  page: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #070a1b 0%, #0d1535 50%, #070a1b 100%)',
-    padding: '24px 16px',
-    fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
-    color: '#e2e8f0',
-  } as React.CSSProperties,
-  center: {
-    maxWidth: 720,
-    margin: '0 auto',
-  } as React.CSSProperties,
-  card: {
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 20,
-    padding: '32px 28px',
-    backdropFilter: 'blur(16px)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-    marginBottom: 24,
-  } as React.CSSProperties,
-  title: {
-    fontSize: 28,
-    fontWeight: 800,
-    textAlign: 'center' as const,
-    background: 'linear-gradient(135deg, #a78bfa, #60a5fa, #34d399)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: 'center' as const,
-    color: '#94a3b8',
-    fontSize: 14,
-    marginBottom: 32,
-  },
-  progressBar: {
-    background: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    height: 8,
-    marginBottom: 24,
-    overflow: 'hidden',
-  } as React.CSSProperties,
-  questionText: {
-    fontSize: 18,
-    fontWeight: 600,
-    lineHeight: 1.6,
-    marginBottom: 24,
-    color: '#f1f5f9',
-  },
-  choiceBtn: (selected: boolean): React.CSSProperties => ({
-    display: 'block',
-    width: '100%',
-    padding: '12px 20px',
-    marginBottom: 10,
-    borderRadius: 12,
-    border: `1px solid ${selected ? '#7c3aed' : 'rgba(255,255,255,0.12)'}`,
-    background: selected
-      ? 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(96,165,250,0.3))'
-      : 'rgba(255,255,255,0.04)',
-    color: selected ? '#e0d4ff' : '#cbd5e1',
-    fontSize: 14,
-    cursor: 'pointer',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-    fontWeight: selected ? 600 : 400,
-  }),
-  navRow: {
-    display: 'flex',
-    gap: 12,
-    marginTop: 8,
-  } as React.CSSProperties,
-  btn: (variant: 'primary' | 'secondary' | 'ghost'): React.CSSProperties => ({
-    flex: 1,
-    padding: '13px 0',
-    borderRadius: 12,
-    border: variant === 'secondary' ? '1px solid rgba(255,255,255,0.15)' : 'none',
-    cursor: 'pointer',
-    fontWeight: 700,
-    fontSize: 15,
-    background:
-      variant === 'primary'
-        ? 'linear-gradient(135deg, #7c3aed, #2563eb)'
-        : variant === 'secondary'
-        ? 'rgba(255,255,255,0.08)'
-        : 'transparent',
-    color: variant === 'ghost' ? '#94a3b8' : '#fff',
-  }),
-};
-
-// ─── 차원 바 컴포넌트 ─────────────────────────────────────────────────────────
 function DimBar({ labelA, labelB, pctA }: { labelA: string; labelB: string; pctA: number }) {
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
-        <span style={{ color: '#a78bfa', fontWeight: 700 }}>{labelA} {pctA}%</span>
-        <span style={{ color: '#60a5fa', fontWeight: 700 }}>{labelB} {100 - pctA}%</span>
+        <span style={{ color: '#1d4ed8', fontWeight: 700 }}>{labelA} {pctA}%</span>
+        <span style={{ color: '#6d7f97', fontWeight: 700 }}>{labelB} {100 - pctA}%</span>
       </div>
-      <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 8, height: 10, overflow: 'hidden' }}>
+      <div className={styles.progressTrack}>
         <div
-          style={{
-            width: `${pctA}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #7c3aed, #a78bfa)',
-            borderRadius: 8,
-            transition: 'width 0.8s ease',
-          }}
+          className={styles.progressFill}
+          style={{ width: `${pctA}%` }}
         />
       </div>
     </div>
@@ -509,234 +413,212 @@ export default function MbtiPage() {
   // ── 인트로 화면 ─────────────────────────────────────────────────
   if (phase === 'intro') {
     return (
-      <div style={S.page}>
-        <div style={S.center}>
-          <div style={S.card}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ fontSize: 64, marginBottom: 16 }}>🌌</div>
-              <h1 style={S.title}>MBTI 성격 유형 검사</h1>
-              <p style={S.subtitle}>48개 질문으로 알아보는 나의 진짜 성격</p>
-            </div>
-            <div
-              style={{
-                background: 'rgba(124,58,237,0.12)',
-                border: '1px solid rgba(124,58,237,0.3)',
-                borderRadius: 14,
-                padding: '20px 24px',
-                marginBottom: 28,
-              }}
-            >
-              <p style={{ color: '#c4b5fd', fontWeight: 600, marginBottom: 10, fontSize: 15 }}>검사 안내</p>
-              <ul style={{ color: '#94a3b8', fontSize: 14, lineHeight: 2, paddingLeft: 18, margin: 0 }}>
-                <li>총 48문항, 각 5단계 응답 (약 5~8분 소요)</li>
-                <li>E/I · S/N · T/F · J/P 4가지 차원 측정</li>
-                <li>정답은 없습니다 — 솔직하게 응답할수록 정확합니다</li>
-                <li>문항은 매번 새롭게 랜덤으로 출제됩니다</li>
-              </ul>
-            </div>
-            <button style={{ ...S.btn('primary'), width: '100%', padding: '16px 0' }} onClick={startQuiz}>
-              검사 시작하기 →
-            </button>
+      <ToolShell
+        eyebrow="Diagnostic Tool"
+        title="MBTI 검사기"
+        description="48개 질문으로 에너지 방향, 인식 방식, 판단 기준, 생활 리듬을 나눠서 봅니다. 결과만 화려한 테스트가 아니라, 답변 흐름과 차원별 비율을 함께 읽게 설계했습니다."
+        badges={['48 Questions', 'Randomized Set', 'Dimension Breakdown']}
+        meta={[
+          { label: 'Duration', value: '약 5~8분' },
+          { label: 'Method', value: '5단계 응답 · 4가지 차원 측정' },
+          { label: 'Output', value: '유형 결과 + 차원별 비율' },
+        ]}
+        main={
+          <div className={styles.stack}>
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>검사 시작 전</h2>
+                  <p className={styles.sectionDescription}>
+                    정답을 고르는 검사가 아니라, 평소 반응에 가까운 선택을 빠르게 고르는 편이 더 정확합니다.
+                  </p>
+                </div>
+              </div>
+              <div className={styles.splitCard}>
+                {[
+                  '총 48문항, 각 5단계 응답으로 진행됩니다.',
+                  'E/I · S/N · T/F · J/P 네 가지 축을 함께 계산합니다.',
+                  '문항 구성은 매번 랜덤으로 섞여 반복 검사 체감이 덜합니다.',
+                ].map((item) => (
+                  <div className={styles.splitItem} key={item}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <div className={styles.actions}>
+                <button className={styles.buttonPrimary} onClick={startQuiz}>
+                  검사 시작하기
+                </button>
+              </div>
+            </section>
           </div>
-        </div>
-      </div>
+        }
+        side={
+          <div className={styles.stack}>
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>이런 분께 맞습니다</h2>
+                  <p className={styles.sectionDescription}>가벼운 유입용 카드보다 결과 해석까지 보려는 사용자에게 맞춰져 있습니다.</p>
+                </div>
+              </div>
+              <div className={styles.splitCard}>
+                {['팀 소개용 프로필 작성', '자기 이해용 기록', '친구와 결과 비교'].map((item) => (
+                  <div className={styles.splitItem} key={item}>{item}</div>
+                ))}
+              </div>
+            </section>
+          </div>
+        }
+      />
     );
   }
 
   // ── 퀴즈 화면 ───────────────────────────────────────────────────
   if (phase === 'quiz') {
     return (
-      <div style={S.page}>
-        <div style={S.center}>
-          <div style={S.card}>
-            {/* 진행률 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 8 }}>
-              <span>Q {current + 1} / {questions.length}</span>
-              <span>{progress}%</span>
+      <ToolShell
+        eyebrow="Diagnostic Tool"
+        title={`MBTI 검사 ${current + 1}/${questions.length}`}
+        description="응답 리듬이 끊기지 않도록 질문과 선택지만 크게 보이게 정리했습니다."
+        badges={['Live Session', 'Single Question Focus']}
+        meta={[
+          { label: 'Progress', value: `${progress}% 완료` },
+          { label: 'Current axis', value: questions[current]?.type || '-' },
+          { label: 'Guide', value: '가장 가까운 반응을 고르세요' },
+        ]}
+        main={
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>질문</h2>
+                <p className={styles.sectionDescription}>{questions[current]?.text}</p>
+              </div>
             </div>
-            <div style={S.progressBar}>
-              <div
-                style={{
-                  width: `${progress}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #7c3aed, #2563eb)',
-                  borderRadius: 8,
-                  transition: 'width 0.3s ease',
-                }}
-              />
+
+            <div className={styles.progressTrack} style={{ marginBottom: 18 }}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
             </div>
 
-            {/* 질문 */}
-            <p style={S.questionText}>{questions[current]?.text}</p>
-
-            {/* 선택지 */}
-            {CHOICES.map((c) => (
-              <button
-                key={c.value}
-                style={S.choiceBtn(currentAnswer === c.value)}
-                onClick={() => selectAnswer(c.value)}
-              >
-                {c.label}
-              </button>
-            ))}
-
-            {/* 이전/건너뛰기 */}
-            <div style={S.navRow}>
-              {current > 0 && (
-                <button style={S.btn('secondary')} onClick={() => setCurrent((c) => c - 1)}>
-                  ← 이전
+            <div className={styles.stack}>
+              {CHOICES.map((choice) => (
+                <button
+                  className={`${styles.optionButton} ${currentAnswer === choice.value ? styles.optionButtonSelected : ''}`}
+                  key={choice.value}
+                  onClick={() => selectAnswer(choice.value)}
+                >
+                  {choice.label}
                 </button>
-              )}
-              {current < questions.length - 1 && currentAnswer !== undefined && (
-                <button style={S.btn('ghost')} onClick={() => setCurrent((c) => c + 1)}>
-                  다음 →
-                </button>
-              )}
+              ))}
             </div>
-          </div>
-        </div>
-      </div>
+
+            <div className={styles.actions}>
+              {current > 0 ? (
+                <button className={styles.buttonSecondary} onClick={() => setCurrent((c) => c - 1)}>
+                  이전
+                </button>
+              ) : null}
+              {current < questions.length - 1 && currentAnswer !== undefined ? (
+                <button className={styles.buttonGhost} onClick={() => setCurrent((c) => c + 1)}>
+                  다음 질문
+                </button>
+              ) : null}
+            </div>
+          </section>
+        }
+        side={
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>응답 팁</h2>
+                <p className={styles.sectionDescription}>너무 오래 고민하지 않아야 자연스러운 프로필이 나옵니다.</p>
+              </div>
+            </div>
+            <div className={styles.splitCard}>
+              {[
+                '이상적인 나보다 평소 반응에 가까운 쪽을 고르세요.',
+                '중간값을 남발하기보다 약간 기운 선택이 더 해석하기 쉽습니다.',
+                '진행률은 자동 저장되지 않으니 한 번에 끝내는 게 좋습니다.',
+              ].map((item) => (
+                <div className={styles.splitItem} key={item}>{item}</div>
+              ))}
+            </div>
+          </section>
+        }
+      />
     );
   }
 
   // ── 결과 화면 ───────────────────────────────────────────────────
   if (phase === 'result' && result && info) {
     return (
-      <div style={S.page}>
-        <div style={S.center}>
-          {/* 메인 결과 카드 */}
-          <div style={S.card}>
-            <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 72, marginBottom: 8 }}>{info.emoji}</div>
-              <div
-                style={{
-                  display: 'inline-block',
-                  padding: '6px 20px',
-                  borderRadius: 100,
-                  background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(37,99,235,0.4))',
-                  border: '1px solid rgba(124,58,237,0.5)',
-                  fontSize: 13,
-                  color: '#c4b5fd',
-                  fontWeight: 600,
-                  marginBottom: 12,
-                }}
-              >
-                {info.nickname}
+      <ToolShell
+        eyebrow="Diagnostic Result"
+        title={result.mbti}
+        description={info.desc}
+        badges={[info.nickname, saving ? 'Saving...' : saved ? 'Saved' : 'Result Ready']}
+        meta={[
+          { label: 'Compatible', value: info.good.join(', ') },
+          { label: 'Challenging', value: info.bad.join(', ') },
+          { label: 'Celebrity', value: info.celeb.slice(0, 2).join(', ') },
+        ]}
+        main={
+          <div className={styles.stack}>
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>차원별 비율</h2>
+                  <p className={styles.sectionDescription}>결과를 하나의 라벨이 아니라 비율로 읽을 수 있게 구성했습니다.</p>
+                </div>
               </div>
-              <h2
-                style={{
-                  fontSize: 52,
-                  fontWeight: 900,
-                  background: 'linear-gradient(135deg, #a78bfa, #60a5fa)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  lineHeight: 1.1,
-                  marginBottom: 16,
-                }}
-              >
-                {result.mbti}
-              </h2>
-              <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.7 }}>{info.desc}</p>
-            </div>
+              <DimBar labelA="E 외향" labelB="I 내향" pctA={result.pcts.E} />
+              <DimBar labelA="S 감각" labelB="N 직관" pctA={result.pcts.S} />
+              <DimBar labelA="T 사고" labelB="F 감정" pctA={result.pcts.T} />
+              <DimBar labelA="J 판단" labelB="P 인식" pctA={result.pcts.J} />
+            </section>
 
-            {/* 유명인 */}
-            <div
-              style={{
-                background: 'rgba(52,211,153,0.08)',
-                border: '1px solid rgba(52,211,153,0.25)',
-                borderRadius: 14,
-                padding: '16px 20px',
-                marginBottom: 20,
-              }}
-            >
-              <p style={{ color: '#34d399', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>같은 MBTI 유명인</p>
-              <p style={{ color: '#a7f3d0', fontSize: 14 }}>{info.celeb.join(' · ')}</p>
-            </div>
-
-            {/* 궁합 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-              <div
-                style={{
-                  background: 'rgba(96,165,250,0.08)',
-                  border: '1px solid rgba(96,165,250,0.25)',
-                  borderRadius: 14,
-                  padding: '16px',
-                  textAlign: 'center',
-                }}
-              >
-                <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>잘 맞는 유형</p>
-                {info.good.map((t) => (
-                  <span
-                    key={t}
-                    style={{
-                      display: 'inline-block',
-                      margin: '2px',
-                      padding: '3px 10px',
-                      borderRadius: 6,
-                      background: 'rgba(96,165,250,0.2)',
-                      color: '#bfdbfe',
-                      fontSize: 13,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {t}
-                  </span>
-                ))}
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>유형 해석</h2>
+                  <p className={styles.sectionDescription}>별명, 유명인, 관계 궁합을 한눈에 확인합니다.</p>
+                </div>
               </div>
-              <div
-                style={{
-                  background: 'rgba(248,113,113,0.08)',
-                  border: '1px solid rgba(248,113,113,0.25)',
-                  borderRadius: 14,
-                  padding: '16px',
-                  textAlign: 'center',
-                }}
-              >
-                <p style={{ color: '#f87171', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>안 맞는 유형</p>
-                {info.bad.map((t) => (
-                  <span
-                    key={t}
-                    style={{
-                      display: 'inline-block',
-                      margin: '2px',
-                      padding: '3px 10px',
-                      borderRadius: 6,
-                      background: 'rgba(248,113,113,0.2)',
-                      color: '#fecaca',
-                      fontSize: 13,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {t}
-                  </span>
-                ))}
+              <div className={styles.splitCard}>
+                <div className={styles.splitItem}>
+                  <strong>같은 유형 유명인</strong>
+                  <p className={styles.sectionDescription} style={{ marginTop: 8 }}>{info.celeb.join(' · ')}</p>
+                </div>
+                <div className={styles.grid2}>
+                  <div className={styles.splitItem}>
+                    <strong>잘 맞는 유형</strong>
+                    <p className={styles.sectionDescription} style={{ marginTop: 8 }}>{info.good.join(', ')}</p>
+                  </div>
+                  <div className={styles.splitItem}>
+                    <strong>안 맞는 유형</strong>
+                    <p className={styles.sectionDescription} style={{ marginTop: 8 }}>{info.bad.join(', ')}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        }
+        side={
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>다시 검사</h2>
+                <p className={styles.sectionDescription}>질문 셋이 랜덤이라, 시간 차이를 두고 다시 해보면 편차를 비교할 수 있습니다.</p>
               </div>
             </div>
-          </div>
-
-          {/* 차원 분석 카드 */}
-          <div style={S.card}>
-            <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: '#e2e8f0' }}>차원별 성향 분석</p>
-            <DimBar labelA="E 외향" labelB="I 내향" pctA={result.pcts.E} />
-            <DimBar labelA="S 감각" labelB="N 직관" pctA={result.pcts.S} />
-            <DimBar labelA="T 사고" labelB="F 감정" pctA={result.pcts.T} />
-            <DimBar labelA="J 판단" labelB="P 인식" pctA={result.pcts.J} />
-          </div>
-
-          {/* 저장 상태 & 재검사 */}
-          <div style={{ textAlign: 'center', color: '#64748b', fontSize: 13, marginBottom: 16 }}>
-            {saving && '결과 저장 중...'}
-            {saved && !saving && '결과가 저장되었습니다.'}
-          </div>
-          <button
-            style={{ ...S.btn('primary'), width: '100%', padding: '16px 0' }}
-            onClick={startQuiz}
-          >
-            다시 검사하기
-          </button>
-        </div>
-      </div>
+            <div className={styles.actions}>
+              <button className={styles.buttonPrimary} onClick={startQuiz}>
+                다시 검사하기
+              </button>
+            </div>
+          </section>
+        }
+      />
     );
   }
 

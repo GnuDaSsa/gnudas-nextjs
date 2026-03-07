@@ -1,5 +1,8 @@
 'use client';
+
 import { useState } from 'react';
+
+import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
 export default function RecordPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,96 +13,159 @@ export default function RecordPage() {
 
   async function transcribe() {
     if (!file) return;
-    setLoading(true); setTranscript(''); setSummary(''); setProgress('파일 업로드 중...');
+
+    setLoading(true);
+    setTranscript('');
+    setSummary('');
+    setProgress('파일 업로드 중...');
+
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      setProgress('음성 변환 중 (파일 크기에 따라 시간이 걸릴 수 있습니다)...');
+      setProgress('음성 변환 중입니다. 파일 크기에 따라 시간이 걸릴 수 있습니다.');
       const res = await fetch('/api/record', { method: 'POST', body: formData });
       const data = await res.json();
 
-      if (data.error) { alert(data.error); return; }
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
       setTranscript(data.transcript || '');
       setSummary(data.summary || '');
-      setProgress('완료!');
+      setProgress('완료되었습니다.');
     } finally {
       setLoading(false);
     }
   }
 
-  const cardStyle = {
-    borderRadius: 14,
-    border: '1px solid rgba(125,187,255,0.3)',
-    background: 'rgba(8,10,34,0.6)',
-    padding: '1.2rem',
-    marginBottom: '1rem',
-  };
-  const btnStyle = {
-    background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)',
-    color: '#fff', fontWeight: 800, border: 'none',
-    borderRadius: 10, padding: '0.65rem 1.4rem',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    fontSize: '0.95rem', opacity: loading ? 0.7 : 1,
-  };
-
   function downloadTxt(text: string, filename: string) {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
     URL.revokeObjectURL(url);
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.4rem' }}>녹음 TXT 변환 및 요약</h1>
-      <p style={{ color: '#d5def3', marginBottom: '1.2rem', fontSize: '0.9rem' }}>
-        음성 파일을 텍스트로 변환하고 AI가 요약합니다. (최대 25MB, mp3/wav/m4a/ogg 등)
-      </p>
+    <ToolShell
+      eyebrow="Voice Workflow"
+      title="녹음 변환·요약"
+      description="회의 음성, 인터뷰, 메모 녹음을 텍스트로 정리하고 핵심만 빠르게 요약합니다. 업로드 직후 진행 상태와 결과를 분리해 확인할 수 있습니다."
+      badges={['Audio → Text', 'Summary Layer', '25MB Upload']}
+      meta={[
+        { label: 'Accept', value: 'mp3, wav, m4a, ogg 등' },
+        { label: 'Best for', value: '회의 기록, 인터뷰 정리, 빠른 요약' },
+        { label: 'Output', value: '원문 텍스트 + AI 요약' },
+      ]}
+      main={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>파일 업로드</h2>
+                <p className={styles.sectionDescription}>
+                  긴 음성일수록 파일명을 명확히 두면 나중에 텍스트 파일을 내려받을 때 관리가 쉽습니다.
+                </p>
+              </div>
+              <span className={styles.pill}>Step 1</span>
+            </div>
 
-      <div style={cardStyle}>
-        <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem', display: 'block', marginBottom: 8 }}>음성 파일 선택</label>
-        <input
-          type="file"
-          accept="audio/*"
-          style={{ color: '#eef4ff', marginBottom: 12 }}
-          onChange={e => setFile(e.target.files?.[0] || null)}
-        />
-        {file && (
-          <div style={{ color: '#d5def3', fontSize: '0.85rem', marginBottom: 12 }}>
-            선택된 파일: {file.name} ({(file.size / 1024 / 1024).toFixed(1)}MB)
-          </div>
-        )}
+            <label className={styles.label}>음성 파일 선택</label>
+            <input
+              className={styles.input}
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
 
-        <button style={btnStyle} onClick={transcribe} disabled={loading || !file}>
-          {loading ? `${progress}` : '변환 시작'}
-        </button>
-      </div>
+            {file ? (
+              <div className={styles.splitItem} style={{ marginTop: 14 }}>
+                <strong>{file.name}</strong>
+                <div className={styles.muted}>
+                  {(file.size / 1024 / 1024).toFixed(1)}MB
+                </div>
+              </div>
+            ) : null}
 
-      {transcript && (
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontWeight: 800, color: '#75e8ff' }}>변환된 텍스트</div>
-            <button
-              onClick={() => downloadTxt(transcript, `transcript_${file?.name || 'record'}.txt`)}
-              style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
-            >TXT 다운로드</button>
-          </div>
-          <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.7, whiteSpace: 'pre-wrap', maxHeight: 300, overflowY: 'auto' }}>
-            {transcript}
-          </div>
+            <div className={styles.actions}>
+              <button
+                className={styles.buttonPrimary}
+                onClick={transcribe}
+                disabled={loading || !file}
+              >
+                {loading ? '변환 진행 중...' : '변환 시작'}
+              </button>
+            </div>
+          </section>
+
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>변환 텍스트</h2>
+                <p className={styles.sectionDescription}>
+                  원문 전체를 확인하고 필요하면 TXT로 내려받을 수 있습니다.
+                </p>
+              </div>
+              {transcript ? (
+                <button
+                  className={styles.buttonSecondary}
+                  onClick={() =>
+                    downloadTxt(transcript, `transcript_${file?.name || 'record'}.txt`)
+                  }
+                >
+                  TXT 다운로드
+                </button>
+              ) : null}
+            </div>
+
+            {transcript ? (
+              <div className={styles.resultPanel}>{transcript}</div>
+            ) : (
+              <p className={styles.emptyState}>변환을 시작하면 원문 텍스트가 이 영역에 표시됩니다.</p>
+            )}
+          </section>
         </div>
-      )}
+      }
+      side={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>진행 상태</h2>
+                <p className={styles.sectionDescription}>업로드부터 요약 완료까지 현재 단계를 보여줍니다.</p>
+              </div>
+            </div>
 
-      {summary && (
-        <div style={cardStyle}>
-          <div style={{ fontWeight: 800, color: '#ff77e6', marginBottom: 10 }}>AI 요약</div>
-          <div style={{ color: '#eef4ff', fontSize: '0.95rem', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {summary}
-          </div>
+            <div className={styles.splitCard}>
+              <div className={styles.splitItem}>
+                <strong>{loading ? '처리 중' : transcript ? '완료' : '대기 중'}</strong>
+                <p className={styles.sectionDescription} style={{ marginTop: 8 }}>
+                  {progress || '파일을 선택하면 여기서 처리 상태를 확인할 수 있습니다.'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>AI 요약</h2>
+                <p className={styles.sectionDescription}>긴 녹음을 빠르게 읽기 좋게 압축합니다.</p>
+              </div>
+            </div>
+
+            {summary ? (
+              <div className={styles.resultPanel}>{summary}</div>
+            ) : (
+              <p className={styles.emptyState}>요약 결과는 이 영역에 표시됩니다.</p>
+            )}
+          </section>
         </div>
-      )}
-    </div>
+      }
+    />
   );
 }

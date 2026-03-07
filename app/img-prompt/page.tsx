@@ -1,5 +1,8 @@
 'use client';
+
 import { useState } from 'react';
+
+import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
 const STYLES = [
   '사실적 (Photorealistic)',
@@ -38,25 +41,6 @@ export default function ImgPromptPage() {
   const [adminPassword, setAdminPassword] = useState('');
   const [imageError, setImageError] = useState('');
 
-  const cardStyle = {
-    borderRadius: 14,
-    border: '1px solid rgba(125,187,255,0.3)',
-    background: 'rgba(8,10,34,0.6)',
-    padding: '1.2rem',
-    marginBottom: '1rem',
-  } as const;
-
-  const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(125,187,255,0.3)',
-    borderRadius: 8,
-    color: '#eef4ff',
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.95rem',
-    outline: 'none',
-  } as const;
-
   function copyText(text: string) {
     navigator.clipboard.writeText(text);
   }
@@ -67,6 +51,7 @@ export default function ImgPromptPage() {
     setGeneratedPrompt('');
     setImageDataUrl(null);
     setImageError('');
+
     try {
       const res = await fetch('/api/img-prompt', {
         method: 'POST',
@@ -84,9 +69,11 @@ export default function ImgPromptPage() {
     if (!generatedPrompt) return;
     if (!isAdmin && !apiKey.trim()) return;
     if (isAdmin && !adminPassword.trim()) return;
+
     setLoadingImage(true);
     setImageDataUrl(null);
     setImageError('');
+
     try {
       const body: Record<string, string> = { prompt: generatedPrompt, aspectRatio: ratio };
       if (isAdmin) body.adminPassword = adminPassword;
@@ -98,6 +85,7 @@ export default function ImgPromptPage() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
+
       if (data.error) setImageError(data.error);
       else setImageDataUrl(data.imageDataUrl || null);
     } finally {
@@ -110,143 +98,194 @@ export default function ImgPromptPage() {
     : '';
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.4rem' }}>AI 이미지 생성기</h1>
-      <p style={{ color: '#d5def3', marginBottom: '1.2rem', fontSize: '0.9rem' }}>한국어 설명을 영문 프롬프트로 변환한 뒤, 이미지를 생성합니다.</p>
+    <ToolShell
+      eyebrow="Creative Production Tool"
+      title="이미지 프롬프트"
+      description="한국어 설명을 이미지 생성용 영어 프롬프트로 바꾸고, 원하는 비율과 스타일에 맞춰 바로 이미지를 확인할 수 있는 워크플로우입니다."
+      badges={['Prompt Translation', 'Image Generation', 'Aspect Ratio Control']}
+      meta={[
+        { label: 'Flow', value: '설명 입력 → 프롬프트 생성 → 이미지 생성' },
+        { label: 'Best for', value: '썸네일, 포스터, 비주얼 콘셉트 초안' },
+        { label: 'Auth', value: '일반 API 키 또는 관리자 모드' },
+      ]}
+      main={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>장면 설명 입력</h2>
+                <p className={styles.sectionDescription}>
+                  분위기, 시간대, 배경, 피사체 행동을 함께 쓰면 프롬프트가 훨씬 정확해집니다.
+                </p>
+              </div>
+              <span className={styles.pill}>Step 1</span>
+            </div>
 
-      {/* STEP 1 */}
-      <div style={cardStyle}>
-        <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem', display: 'block', marginBottom: 6 }}>원하는 이미지 설명 (한국어)</label>
-        <textarea
-          style={{ ...inputStyle, height: 100, resize: 'vertical' }}
-          placeholder="예: 밤하늘 아래 벚꽃이 피어있는 일본 거리, 사람들이 걸어다니고 있음"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-        />
+            <label className={styles.label}>원하는 이미지 설명</label>
+            <textarea
+              className={styles.textarea}
+              placeholder="예: 밤하늘 아래 벚꽃이 피어있는 일본 거리, 비가 막 그친 뒤 젖은 도로에 네온이 반사되고 있음"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-          <div>
-            <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem', display: 'block', marginBottom: 4 }}>스타일</label>
-            <select style={{ ...inputStyle, cursor: 'pointer' }} value={style} onChange={e => setStyle(e.target.value)}>
-              {STYLES.map(s => <option key={s} value={s} style={{ background: '#0c1242' }}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem', display: 'block', marginBottom: 4 }}>비율</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {RATIOS.map(r => (
-                <button
-                  key={r.value}
-                  onClick={() => setRatio(r.value)}
-                  style={{
-                    flex: 1,
-                    background: ratio === r.value ? 'rgba(117,232,255,0.18)' : 'rgba(255,255,255,0.04)',
-                    border: ratio === r.value ? '1px solid rgba(117,232,255,0.6)' : '1px solid rgba(125,187,255,0.2)',
-                    borderRadius: 8,
-                    color: ratio === r.value ? '#75e8ff' : '#8db9ff',
-                    padding: '0.45rem 0.3rem',
-                    cursor: 'pointer',
-                    fontSize: '0.78rem',
-                    fontWeight: ratio === r.value ? 700 : 400,
-                    textAlign: 'center',
-                  }}
+            <div className={styles.grid2} style={{ marginTop: 14 }}>
+              <div>
+                <label className={styles.label}>스타일</label>
+                <select
+                  className={styles.select}
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
                 >
-                  {r.label}
-                </button>
-              ))}
+                  {STYLES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={styles.label}>비율</label>
+                <select
+                  className={styles.select}
+                  value={ratio}
+                  onChange={(e) => setRatio(e.target.value)}
+                >
+                  {RATIOS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <button
-          style={{ background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)', color: '#fff', fontWeight: 800, border: 'none', borderRadius: 10, padding: '0.65rem 1.4rem', cursor: loadingPrompt ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: loadingPrompt ? 0.7 : 1, marginTop: 16, width: '100%' }}
-          onClick={makePrompt}
-          disabled={loadingPrompt}
-        >
-          {loadingPrompt ? '변환 중...' : '① 프롬프트 만들기'}
-        </button>
-      </div>
-
-      {/* STEP 2 */}
-      {generatedPrompt && (
-        <>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontWeight: 800, color: '#75e8ff', fontFamily: 'monospace', fontSize: '0.85rem' }}>prompt.json</div>
-              <button onClick={() => copyText(promptJson)} style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
-            </div>
-            <pre style={{
-              margin: 0,
-              padding: '0.9rem',
-              background: 'rgba(0,0,0,0.35)',
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.07)',
-              fontFamily: 'monospace',
-              fontSize: '0.82rem',
-              color: '#a8d8ff',
-              lineHeight: 1.65,
-              wordBreak: 'break-word',
-              whiteSpace: 'pre-wrap',
-              overflowX: 'auto',
-            }}>
-              <span style={{ color: '#666' }}>{'{'}</span>{'\n'}
-              <span style={{ color: '#666' }}>{'  '}</span>
-              <span style={{ color: '#f97316' }}>&quot;prompt&quot;</span>
-              <span style={{ color: '#888' }}>: </span>
-              <span style={{ color: '#a8e6cf' }}>&quot;{generatedPrompt}&quot;</span>{'\n'}
-              <span style={{ color: '#666' }}>{'}'}</span>
-            </pre>
-          </div>
-
-          {/* API 키 입력 */}
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem' }}>
-                {isAdmin ? '관리자 비밀번호' : 'Google AI API 키'}
-              </label>
-              <button
-                onClick={() => { setIsAdmin(v => !v); setApiKey(''); setAdminPassword(''); }}
-                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: isAdmin ? '#75e8ff' : '#555', padding: '0.2rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
-              >
-                {isAdmin ? '관리자 모드 ✓' : '관리자'}
+            <div className={styles.actions}>
+              <button className={styles.buttonPrimary} onClick={makePrompt} disabled={loadingPrompt}>
+                {loadingPrompt ? '프롬프트 생성 중...' : '프롬프트 만들기'}
               </button>
             </div>
-            <input
-              type="password"
-              style={inputStyle}
-              placeholder={isAdmin ? '관리자 비밀번호 입력' : 'AIza...로 시작하는 Google AI API 키'}
-              value={isAdmin ? adminPassword : apiKey}
-              onChange={e => isAdmin ? setAdminPassword(e.target.value) : setApiKey(e.target.value)}
-            />
-            {!isAdmin && (
-              <p style={{ fontSize: '0.78rem', color: '#445', marginTop: 6 }}>
-                Google AI Studio에서 발급받은 API 키를 입력하세요. 키는 서버에 저장되지 않습니다.
-              </p>
-            )}
-          </div>
+          </section>
 
-          {imageError && (
-            <div style={{ ...cardStyle, border: '1px solid rgba(255,80,80,0.3)', color: '#ff8080', fontSize: '0.9rem' }}>
-              {imageError}
-            </div>
-          )}
+          {generatedPrompt ? (
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>생성된 프롬프트</h2>
+                  <p className={styles.sectionDescription}>
+                    그대로 복사해 다른 툴로 넘기거나, 바로 이미지 생성을 이어갈 수 있습니다.
+                  </p>
+                </div>
+                <button className={styles.buttonSecondary} onClick={() => copyText(promptJson)}>
+                  JSON 복사
+                </button>
+              </div>
 
-          <button
-            style={{ background: 'linear-gradient(90deg,#f97316,#ec4899)', color: '#fff', fontWeight: 800, border: 'none', borderRadius: 10, padding: '0.65rem 1.4rem', cursor: loadingImage ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: loadingImage ? 0.7 : 1, marginBottom: '1rem', width: '100%' }}
-            onClick={generateImage}
-            disabled={loadingImage}
-          >
-            {loadingImage ? '이미지 생성 중...' : '② 이미지 생성하기'}
-          </button>
-        </>
-      )}
+              <pre className={styles.codeBlock}>{promptJson}</pre>
 
-      {imageDataUrl && (
-        <div style={cardStyle}>
-          <div style={{ fontWeight: 800, color: '#75e8ff', marginBottom: 10 }}>Generated Image</div>
-          <img src={imageDataUrl} alt="생성된 이미지" style={{ width: '100%', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)' }} />
+              <div className={styles.actions}>
+                <button className={styles.buttonPrimary} onClick={generateImage} disabled={loadingImage}>
+                  {loadingImage ? '이미지 생성 중...' : '이미지 생성하기'}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {imageDataUrl ? (
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>생성 이미지</h2>
+                  <p className={styles.sectionDescription}>프롬프트와 비율이 실제로 어떻게 반영됐는지 확인합니다.</p>
+                </div>
+              </div>
+              <img
+                src={imageDataUrl}
+                alt="생성된 이미지"
+                style={{ width: '100%', borderRadius: 24, border: '1px solid rgba(88, 112, 145, 0.14)' }}
+              />
+            </section>
+          ) : null}
         </div>
-      )}
-    </div>
+      }
+      side={
+        <div className={styles.stack}>
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>생성 권한</h2>
+                <p className={styles.sectionDescription}>일반 사용자와 관리자 모드를 분리해 입력 실수를 줄였습니다.</p>
+              </div>
+            </div>
+
+            <div className={styles.actions} style={{ marginTop: 0 }}>
+              <button
+                className={isAdmin ? styles.buttonSecondary : styles.buttonPrimary}
+                onClick={() => {
+                  setIsAdmin(false);
+                  setApiKey('');
+                  setAdminPassword('');
+                }}
+              >
+                일반 사용자
+              </button>
+              <button
+                className={isAdmin ? styles.buttonPrimary : styles.buttonSecondary}
+                onClick={() => {
+                  setIsAdmin(true);
+                  setApiKey('');
+                  setAdminPassword('');
+                }}
+              >
+                관리자
+              </button>
+            </div>
+
+            <label className={styles.label} style={{ marginTop: 14 }}>
+              {isAdmin ? '관리자 비밀번호' : 'Google AI API 키'}
+            </label>
+            <input
+              className={styles.input}
+              type="password"
+              placeholder={isAdmin ? '관리자 비밀번호 입력' : 'AIza...로 시작하는 API 키'}
+              value={isAdmin ? adminPassword : apiKey}
+              onChange={(e) =>
+                isAdmin ? setAdminPassword(e.target.value) : setApiKey(e.target.value)
+              }
+            />
+
+            {!isAdmin ? (
+              <p className={styles.emptyState} style={{ marginTop: 10 }}>
+                입력한 키는 서버에 저장되지 않습니다. 필요한 작업이 끝나면 새로고침해도 됩니다.
+              </p>
+            ) : null}
+          </section>
+
+          <section className={styles.surface}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>실패 안내</h2>
+                <p className={styles.sectionDescription}>에러를 결과와 같은 톤으로 숨기지 않고 분리해서 보여줍니다.</p>
+              </div>
+            </div>
+
+            {imageError ? (
+              <div
+                className={styles.splitItem}
+                style={{
+                  borderColor: 'rgba(205, 92, 92, 0.22)',
+                  background: 'rgba(255, 244, 244, 0.92)',
+                  color: '#8b1e1e',
+                }}
+              >
+                {imageError}
+              </div>
+            ) : (
+              <p className={styles.emptyState}>이미지 생성 에러가 발생하면 이 영역에 분리 표시됩니다.</p>
+            )}
+          </section>
+        </div>
+      }
+    />
   );
 }
