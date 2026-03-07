@@ -4,123 +4,117 @@ import { useState } from 'react';
 
 import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
-// ─── 질문 데이터 ──────────────────────────────────────────────────────────────
-// 첫 번째 선택지 = 테토 성향(T), 두 번째 = 에겐 성향(E)
+type GenderKey = 'male' | 'female';
+type EnergyKey = 'teto' | 'egen';
+type ResultKey = 'teto_male' | 'egen_male' | 'teto_female' | 'egen_female';
+
 interface TetoQuestion {
   question: string;
-  options: [string, string]; // [테토, 에겐]
+  options: [string, string];
 }
 
 const QUESTIONS: TetoQuestion[] = [
   {
-    question: '친구들과 만날 때 나는...',
-    options: [
-      '활발하게 대화를 이끌어가는 편이다',
-      '조용히 듣고 있다가 적절한 타이밍에 말한다',
-    ],
+    question: '호감 가는 사람이 생기면 먼저 분위기를 만든다.',
+    options: ['가볍게 말을 걸거나 약속을 잡는다', '상대 반응을 보면서 천천히 거리를 좁힌다'],
   },
   {
-    question: '새로운 사람을 만날 때...',
-    options: [
-      '먼저 다가가서 인사를 건넨다',
-      '상대방이 먼저 다가올 때까지 기다린다',
-    ],
+    question: '썸 단계에서 나는...',
+    options: ['답답한 텐션보다 직진형이 편하다', '은근한 텐션과 여지를 두는 쪽이 편하다'],
   },
   {
-    question: '문제가 생겼을 때 나는...',
-    options: [
-      '즉시 해결책을 찾으려고 적극적으로 나선다',
-      '차분히 상황을 파악한 후 신중하게 대응한다',
-    ],
+    question: '연락 스타일은...',
+    options: ['생각나면 바로 보내고 답도 빠른 편이다', '생각을 정리해서 보내고 템포도 일정하다'],
+  },
+  {
+    question: '모임에서 내 존재감은...',
+    options: ['분위기를 띄우거나 대화를 리드하는 쪽이다', '필요할 때 한마디씩 핵심을 짚는 쪽이다'],
+  },
+  {
+    question: '칭찬을 받을 때 더 자연스러운 건...',
+    options: ['대놓고 표현받는 것이 좋다', '은근하게 알아봐 주는 것이 좋다'],
+  },
+  {
+    question: '스타일 취향은 대체로...',
+    options: ['또렷하고 포인트 있는 인상이 좋다', '부드럽고 정돈된 인상이 좋다'],
+  },
+  {
+    question: '갈등 상황에서 나는...',
+    options: ['불편해도 빨리 꺼내서 정리하려 한다', '조금 더 보고 신중하게 말하려 한다'],
+  },
+  {
+    question: '좋아하는 사람 앞에서 나는...',
+    options: ['티가 나는 편이고 반응도 빠르다', '티를 덜 내지만 오래 지켜보는 편이다'],
+  },
+  {
+    question: '데이트를 잡을 때는...',
+    options: ['내가 먼저 제안하고 흐름을 만든다', '상대 제안을 보고 맞춰가는 편이다'],
   },
   {
     question: '에너지 충전 방식은...',
-    options: [
-      '사람들과 어울리고 활동할 때 충전된다',
-      '혼자만의 조용한 시간이 있어야 충전된다',
-    ],
+    options: ['밖으로 움직이면서 풀어낸다', '혼자 정리하며 천천히 회복한다'],
   },
   {
-    question: '결정을 내릴 때...',
-    options: [
-      '빠르게 판단하고 바로 행동한다',
-      '충분히 고민하고 신중하게 결정한다',
-    ],
+    question: '첫인상으로 더 자주 듣는 말은...',
+    options: ['시원시원하고 당당해 보인다', '차분하고 부드러워 보인다'],
   },
   {
-    question: '감정 표현 방식은...',
-    options: [
-      '느끼는 것을 솔직하고 직접적으로 표현한다',
-      '감정을 안으로 삼키거나 조심스럽게 표현한다',
-    ],
-  },
-  {
-    question: '주목받는 상황에서 나는...',
-    options: [
-      '시선이 집중되는 게 오히려 신나고 자신감이 생긴다',
-      '주목받는 상황이 부담스럽고 뒤에 있는 게 편하다',
-    ],
-  },
-  {
-    question: '갈등이 생겼을 때...',
-    options: [
-      '불편하더라도 직접 이야기하여 빠르게 해결한다',
-      '상황이 자연스럽게 해결되기를 기다리는 편이다',
-    ],
-  },
-  {
-    question: '계획 없이 시간이 생기면...',
-    options: [
-      '친구에게 바로 연락해 뭔가 함께 하려 한다',
-      '집에서 혼자 쉬거나 취미를 즐긴다',
-    ],
-  },
-  {
-    question: '발표나 무대 앞에 서게 된다면...',
-    options: [
-      '긴장보다는 설레는 마음이 더 크다',
-      '긴장되지만 최대한 준비해서 임한다',
-    ],
-  },
-  {
-    question: '오랫동안 연락 없던 친구에게...',
-    options: [
-      '먼저 연락해서 안부를 묻고 만날 약속을 잡는다',
-      '그리워도 먼저 연락하기가 어렵고 기다린다',
-    ],
+    question: '관계에서 더 중요한 것은...',
+    options: ['확실한 표현과 분명한 액션', '안정감과 섬세한 배려'],
   },
 ];
 
-// ─── 결과 데이터 ──────────────────────────────────────────────────────────────
 interface ResultInfo {
   label: string;
   emoji: string;
   desc: string;
   traits: string[];
   tip: string;
+  accent: string;
+  accentSoft: string;
+  accentBorder: string;
 }
 
-const RESULTS: Record<'teto' | 'egen' | 'balance', ResultInfo> = {
-  teto: {
-    label: '테토형',
+const RESULTS: Record<ResultKey, ResultInfo> = {
+  teto_male: {
+    label: '테토남',
     emoji: '🔥',
-    desc: '에너지 넘치고 주도적인 테토남/테토녀 스타일! 사람들 사이에서 자연스럽게 중심이 되고, 솔직하고 직접적인 소통을 즐깁니다. 밝은 에너지로 주변을 환기시키는 타입입니다.',
-    traits: ['활발하고 사교적', '직접적인 소통', '빠른 결단력', '에너지 발산형', '리더십 있음'],
-    tip: '에겐형과 함께하면 서로의 장점이 빛나는 환상의 조합이 될 수 있어요!',
+    desc: '직진력과 존재감이 강하게 드러나는 타입입니다. 표현이 분명하고 관계의 흐름을 먼저 만드는 편이라, 답답한 텐션보다 명확한 액션에서 매력이 살아납니다.',
+    traits: ['직설적 표현', '빠른 리드', '시원한 존재감', '주도적 썸 텐션', '행동 우선형'],
+    tip: '강한 추진력이 장점이지만, 상대 템포를 한 박자 읽어주면 매력이 더 오래 갑니다.',
+    accent: '#f97316',
+    accentSoft: 'rgba(249,115,22,0.12)',
+    accentBorder: 'rgba(249,115,22,0.28)',
   },
-  egen: {
-    label: '에겐형',
+  egen_male: {
+    label: '에겐남',
     emoji: '🌙',
-    desc: '차분하고 신중한 에겐남/에겐녀 스타일! 깊은 관찰력과 세심함으로 주변을 배려하며, 혼자만의 시간을 소중히 여깁니다. 조용하지만 강한 내면을 가진 타입입니다.',
-    traits: ['신중하고 사려깊음', '깊은 관찰력', '혼자 있는 시간 선호', '에너지 충전형', '내면이 풍부'],
-    tip: '테토형과 함께하면 서로의 부족한 부분을 채워주는 멋진 파트너가 될 수 있어요!',
+    desc: '부드럽고 안정적인 매력을 주는 타입입니다. 앞에 나서기보다 분위기를 읽고 타이밍을 보는 편이라, 서서히 신뢰를 쌓는 관계에서 강점이 큽니다.',
+    traits: ['잔잔한 배려', '신중한 접근', '정서적 안정감', '관찰 후 반응', '은근한 매력'],
+    tip: '속도가 느리게 보일 수 있으니, 중요한 순간에는 호감 표현을 조금 더 명확히 해주는 편이 좋습니다.',
+    accent: '#6366f1',
+    accentSoft: 'rgba(99,102,241,0.12)',
+    accentBorder: 'rgba(99,102,241,0.28)',
   },
-  balance: {
-    label: '균형형',
-    emoji: '⚖️',
-    desc: '테토와 에겐의 장점을 골고루 갖춘 균형형! 상황에 따라 유연하게 대처하며, 외향적인 면과 내향적인 면을 모두 발휘할 수 있습니다. 적응력이 뛰어난 타입입니다.',
-    traits: ['유연한 적응력', '상황 판단력 뛰어남', '외향·내향 균형', '다양한 사람과 어울림', '자기만의 세계 있음'],
-    tip: '양쪽의 장점을 모두 갖고 있으니, 어떤 상황에서도 빛날 수 있어요!',
+  teto_female: {
+    label: '테토녀',
+    emoji: '⚡',
+    desc: '밝고 선명한 에너지가 먼저 보이는 타입입니다. 감정 표현과 리액션이 분명하고, 관계에서도 끌리면 끌린다고 보여주는 편이라 존재감이 강합니다.',
+    traits: ['밝은 리액션', '직진형 호감 표현', '또렷한 스타일', '선명한 분위기', '주도적 관계감'],
+    tip: '센 인상으로만 읽히지 않도록, 세심함이 보이는 순간을 같이 만들어주면 밸런스가 좋아집니다.',
+    accent: '#ec4899',
+    accentSoft: 'rgba(236,72,153,0.12)',
+    accentBorder: 'rgba(236,72,153,0.28)',
+  },
+  egen_female: {
+    label: '에겐녀',
+    emoji: '🫧',
+    desc: '부드럽고 섬세한 결이 매력인 타입입니다. 천천히 가까워지면서도 정서적 밀도를 쌓는 데 강해, 오래 볼수록 편안함과 깊이가 살아나는 쪽입니다.',
+    traits: ['섬세한 배려', '은근한 텐션', '정돈된 무드', '깊게 스며드는 매력', '안정감 있는 관계'],
+    tip: '조심스러움이 너무 길어지면 신호가 약해 보일 수 있으니, 결정적 순간에는 확실한 표현이 필요합니다.',
+    accent: '#14b8a6',
+    accentSoft: 'rgba(20,184,166,0.12)',
+    accentBorder: 'rgba(20,184,166,0.28)',
   },
 };
 
@@ -135,6 +129,7 @@ function OptionButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`${styles.optionButton} ${selected ? styles.optionButtonSelected : ''}`}
     >
@@ -143,16 +138,20 @@ function OptionButton({
   );
 }
 
-// ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 export default function TetoPage() {
   const [phase, setPhase] = useState<'intro' | 'quiz' | 'result'>('intro');
-  const [answers, setAnswers] = useState<Array<number | null>>([]); // 0=테토, 1=에겐
-  const [resultKey, setResultKey] = useState<'teto' | 'egen' | 'balance' | null>(null);
+  const [gender, setGender] = useState<GenderKey | null>(null);
+  const [answers, setAnswers] = useState<Array<number | null>>([]);
+  const [resultKey, setResultKey] = useState<ResultKey | null>(null);
   const [tetoCount, setTetoCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function startQuiz() {
+    if (!gender) {
+      return;
+    }
+
     setAnswers(Array.from({ length: QUESTIONS.length }, () => null));
     setResultKey(null);
     setSaved(false);
@@ -163,37 +162,54 @@ export default function TetoPage() {
     setAnswers((prev) => prev.map((value, index) => (index === questionIndex ? optionIndex : value)));
   }
 
+  function resolveResultKey(selectedGender: GenderKey, dominantEnergy: EnergyKey) {
+    if (selectedGender === 'male') {
+      return dominantEnergy === 'teto' ? 'teto_male' : 'egen_male';
+    }
+
+    return dominantEnergy === 'teto' ? 'teto_female' : 'egen_female';
+  }
+
   function handleSubmitQuiz() {
-    if (answers.some((answer) => answer === null)) {
+    if (!gender || answers.some((answer) => answer === null)) {
       return;
     }
 
     const resolvedAnswers = answers as number[];
     const tCount = resolvedAnswers.filter((answer) => answer === 0).length;
     const eCount = resolvedAnswers.filter((answer) => answer === 1).length;
+    const dominantEnergy: EnergyKey = tCount >= eCount ? 'teto' : 'egen';
+    const key = resolveResultKey(gender, dominantEnergy);
+
     setTetoCount(tCount);
-
-    let key: 'teto' | 'egen' | 'balance';
-    if (tCount >= 7) key = 'teto';
-    else if (eCount >= 7) key = 'egen';
-    else key = 'balance';
-
     setResultKey(key);
     setPhase('result');
-    saveResult(key, tCount, eCount);
+    saveResult(key, gender, tCount, eCount, dominantEnergy);
   }
 
-  async function saveResult(key: string, tCount: number, eCount: number) {
+  async function saveResult(
+    key: ResultKey,
+    selectedGender: GenderKey,
+    tCount: number,
+    eCount: number,
+    dominantEnergy: EnergyKey,
+  ) {
     setSaving(true);
     try {
       await fetch('/api/teto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ result: key, tetoScore: tCount, egenScore: eCount }),
+        body: JSON.stringify({
+          result: key,
+          gender: selectedGender,
+          dominantEnergy,
+          tetoScore: tCount,
+          egenScore: eCount,
+        }),
       });
       setSaved(true);
     } catch {
-      // 저장 실패 무시
+      // 저장 실패는 무시한다.
     } finally {
       setSaving(false);
     }
@@ -203,43 +219,64 @@ export default function TetoPage() {
   const progress = Math.round((answeredCount / QUESTIONS.length) * 100);
   const result = resultKey ? RESULTS[resultKey] : null;
 
-  // ── 인트로 ───────────────────────────────────────────────────────
   if (phase === 'intro') {
     return (
       <ToolShell
         eyebrow="Personality Snapshot"
         title="테토에겐 테스트"
-        description="주도적인 에너지 발산형인지, 차분한 에너지 충전형인지 빠르게 가늠하는 짧은 진단입니다. 결과를 가볍게 소비하는 카드 UI 대신, 응답 흐름이 보이도록 정리했습니다."
-        badges={['11 Questions', '2~3 Minutes', 'Quick Result']}
+        description="국내 밈에서 주로 쓰이는 `테토남 · 에겐남 · 테토녀 · 에겐녀` 4분류 기준으로 다시 정리했습니다. 주도성, 표현 방식, 썸 텐션, 무드 선호를 중심으로 빠르게 판별합니다."
+        badges={['12 Questions', '4 Results', 'Trend-based']}
         meta={[
-          { label: 'Format', value: '11개 질문 · 2지선다' },
-          { label: 'Output', value: '테토형 · 에겐형 · 균형형' },
-          { label: 'Best for', value: '빠른 성향 체크와 공유' },
+          { label: 'Format', value: '12개 질문 · 2지선다' },
+          { label: 'Output', value: '테토남 · 에겐남 · 테토녀 · 에겐녀' },
+          { label: 'Need', value: '시작 전 성별 선택' },
         ]}
         main={
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2 className={styles.sectionTitle}>성향 기준</h2>
-                <p className={styles.sectionDescription}>둘 중 하나가 더 우월한 개념이 아니라, 에너지를 쓰는 방식의 차이로 읽는 테스트입니다.</p>
+                <h2 className={styles.sectionTitle}>시작 전 선택</h2>
+                <p className={styles.sectionDescription}>
+                  결과가 4유형으로 갈리기 때문에 먼저 기준 성별을 선택합니다.
+                </p>
               </div>
             </div>
+
             <div className={styles.grid2}>
-              <div className={styles.splitItem}>
-                <strong>테토형</strong>
-                <p className={styles.sectionDescription} style={{ marginTop: 8 }}>
-                  활발하고 주도적인 에너지 발산형. 먼저 다가가고 직접적으로 표현합니다.
-                </p>
-              </div>
-              <div className={styles.splitItem}>
-                <strong>에겐형</strong>
-                <p className={styles.sectionDescription} style={{ marginTop: 8 }}>
-                  차분하고 신중한 에너지 충전형. 깊게 관찰하고 세심하게 반응합니다.
-                </p>
-              </div>
+              {([
+                { key: 'male', label: '남성 기준', desc: '결과를 테토남 / 에겐남으로 계산' },
+                { key: 'female', label: '여성 기준', desc: '결과를 테토녀 / 에겐녀로 계산' },
+              ] as const).map((item) => {
+                const active = gender === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setGender(item.key)}
+                    className={styles.splitItem}
+                    style={{
+                      textAlign: 'left',
+                      borderColor: active ? 'rgba(37,99,235,0.44)' : 'rgba(69, 101, 149, 0.18)',
+                      background: active
+                        ? 'linear-gradient(180deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08))'
+                        : 'rgba(255,255,255,0.72)',
+                    }}
+                  >
+                    <strong style={{ color: active ? '#1d4ed8' : '#11243d' }}>{item.label}</strong>
+                    <p className={styles.sectionDescription} style={{ marginTop: 8 }}>
+                      {item.desc}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
+
             <div className={styles.actions}>
-              <button className={styles.buttonPrimary} onClick={startQuiz}>
+              <button
+                className={gender ? styles.buttonPrimary : styles.buttonGhost}
+                onClick={startQuiz}
+                disabled={!gender}
+              >
                 테스트 시작하기
               </button>
             </div>
@@ -249,15 +286,17 @@ export default function TetoPage() {
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2 className={styles.sectionTitle}>진행 안내</h2>
-                <p className={styles.sectionDescription}>모든 질문은 직감적으로 답하는 편이 결과 해석이 쉽습니다.</p>
+                <h2 className={styles.sectionTitle}>판별 기준</h2>
+                <p className={styles.sectionDescription}>
+                  웹상에서 반복적으로 언급되는 차이를 바탕으로 질문 축을 정리했습니다.
+                </p>
               </div>
             </div>
             <div className={styles.splitCard}>
               {[
-                '총 11개 질문, 2~3분 안에 끝납니다.',
-                '질문 수가 적은 만큼 애매할 때는 평소 습관 기준으로 고르세요.',
-                '결과는 재미 요소가 강하지만 저장 데이터로도 남습니다.',
+                '테토: 직진, 존재감, 선명한 표현, 리드 성향',
+                '에겐: 부드러움, 관찰, 안정감, 은근한 텐션',
+                '연애/썸 맥락에서의 행동 차이를 질문 비중에 반영',
               ].map((item) => (
                 <div className={styles.splitItem} key={item}>{item}</div>
               ))}
@@ -268,25 +307,26 @@ export default function TetoPage() {
     );
   }
 
-  // ── 퀴즈 ─────────────────────────────────────────────────────────
   if (phase === 'quiz') {
     return (
       <ToolShell
         eyebrow="Personality Snapshot"
         title="테토에겐 테스트"
-        description="MBTI처럼 문항별로 바로 선택하고 한 번에 결과를 확인하는 방식으로 바꿨습니다."
-        badges={['11 Questions', 'Binary Choice', 'One Page']}
+        description="문항별로 바로 선택하고 한 번에 결과를 확인합니다. 질문 수는 12개로 유지했습니다."
+        badges={['12 Questions', 'Binary Choice', 'One Page']}
         meta={[
           { label: 'Progress', value: `${progress}% 완료` },
           { label: 'Answered', value: `${answeredCount}/${QUESTIONS.length}` },
-          { label: 'Mode', value: '문항별 즉시 선택' },
+          { label: 'Track', value: gender === 'male' ? '남성 기준' : '여성 기준' },
         ]}
         main={
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
                 <h2 className={styles.sectionTitle}>질문 목록</h2>
-                <p className={styles.sectionDescription}>각 문항에서 더 가까운 쪽을 바로 고르면 됩니다. 탭 이동 없이 연속으로 체크할 수 있습니다.</p>
+                <p className={styles.sectionDescription}>
+                  최근 밈 문맥에 맞게 썸, 표현, 리드, 무드 선호 질문을 섞었습니다.
+                </p>
               </div>
             </div>
 
@@ -347,13 +387,16 @@ export default function TetoPage() {
             <div className={styles.sectionHeader}>
               <div>
                 <h2 className={styles.sectionTitle}>응답 팁</h2>
-                <p className={styles.sectionDescription}>사교성 하나만 보지 말고 갈등, 발표, 연락 습관까지 같이 생각하세요.</p>
+                <p className={styles.sectionDescription}>
+                  내가 되고 싶은 모습보다 실제로 자주 나오는 반응을 기준으로 고르는 편이 정확합니다.
+                </p>
               </div>
             </div>
             <div className={styles.splitCard}>
               {[
-                '둘 다 맞는 것 같아도 더 자주 나오는 쪽을 고르면 됩니다.',
-                '최근 일주일보다 평소 패턴 기준이 안정적입니다.',
+                '썸이나 호감 상황에서의 평소 반응을 떠올리기',
+                '최근 하루 기분보다 기본 텐션을 기준으로 답하기',
+                '애매하면 더 자주 먼저 하는 행동 쪽을 선택하기',
               ].map((item) => (
                 <div className={styles.splitItem} key={item}>{item}</div>
               ))}
@@ -364,25 +407,9 @@ export default function TetoPage() {
     );
   }
 
-  // ── 결과 ─────────────────────────────────────────────────────────
   if (phase === 'result' && result && resultKey) {
     const egenCount = QUESTIONS.length - tetoCount;
     const tetoPct = Math.round((tetoCount / QUESTIONS.length) * 100);
-
-    const accentColor =
-      resultKey === 'teto' ? '#fb923c' : resultKey === 'egen' ? '#818cf8' : '#34d399';
-    const accentBg =
-      resultKey === 'teto'
-        ? 'rgba(234,88,12,0.12)'
-        : resultKey === 'egen'
-        ? 'rgba(99,102,241,0.12)'
-        : 'rgba(52,211,153,0.12)';
-    const accentBorder =
-      resultKey === 'teto'
-        ? 'rgba(234,88,12,0.3)'
-        : resultKey === 'egen'
-        ? 'rgba(99,102,241,0.3)'
-        : 'rgba(52,211,153,0.3)';
 
     return (
       <ToolShell
@@ -393,7 +420,7 @@ export default function TetoPage() {
         meta={[
           { label: 'Teto score', value: `${tetoCount}점 · ${tetoPct}%` },
           { label: 'Egen score', value: `${egenCount}점 · ${100 - tetoPct}%` },
-          { label: 'Result key', value: resultKey },
+          { label: 'Track', value: gender === 'male' ? '남성 기준' : '여성 기준' },
         ]}
         main={
           <div className={styles.stack}>
@@ -401,15 +428,22 @@ export default function TetoPage() {
               <div className={styles.sectionHeader}>
                 <div>
                   <h2 className={styles.sectionTitle}>성향 분포</h2>
-                  <p className={styles.sectionDescription}>한쪽으로 강하게 기울었는지, 균형형인지 한 번에 읽을 수 있습니다.</p>
+                  <p className={styles.sectionDescription}>
+                    한쪽으로 얼마나 기울었는지 바로 읽을 수 있게 정리했습니다.
+                  </p>
                 </div>
               </div>
-              <div style={{ marginBottom: 10, color: accentColor, fontWeight: 700 }}>{result.emoji} {result.label}</div>
+              <div style={{ marginBottom: 10, color: result.accent, fontWeight: 700 }}>
+                {result.emoji} {result.label}
+              </div>
               <div className={styles.progressTrack}>
-                <div className={styles.progressFill} style={{ width: `${tetoPct}%`, background: 'linear-gradient(90deg, #ea580c, #fb923c)' }} />
+                <div
+                  className={styles.progressFill}
+                  style={{ width: `${tetoPct}%`, background: `linear-gradient(90deg, ${result.accent}, #facc15)` }}
+                />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 13 }}>
-                <span style={{ color: '#ea580c', fontWeight: 700 }}>테토 {tetoPct}%</span>
+                <span style={{ color: result.accent, fontWeight: 700 }}>테토 {tetoPct}%</span>
                 <span style={{ color: '#516681', fontWeight: 700 }}>에겐 {100 - tetoPct}%</span>
               </div>
             </section>
@@ -418,7 +452,9 @@ export default function TetoPage() {
               <div className={styles.sectionHeader}>
                 <div>
                   <h2 className={styles.sectionTitle}>핵심 특성</h2>
-                  <p className={styles.sectionDescription}>결과 문장을 해시태그처럼 읽기 쉽게 정리했습니다.</p>
+                  <p className={styles.sectionDescription}>
+                    밈에서 소비되는 이미지와 실제 응답 패턴이 겹치는 지점을 키워드로 정리했습니다.
+                  </p>
                 </div>
               </div>
               <div className={styles.badgeRow}>
@@ -426,9 +462,14 @@ export default function TetoPage() {
                   <span className={styles.badge} key={trait}>{trait}</span>
                 ))}
               </div>
-              <div className={styles.splitItem} style={{ marginTop: 16, borderColor: accentBorder, background: accentBg }}>
-                <strong style={{ color: accentColor }}>궁합 팁</strong>
-                <p className={styles.sectionDescription} style={{ marginTop: 8 }}>{result.tip}</p>
+              <div
+                className={styles.splitItem}
+                style={{ marginTop: 16, borderColor: result.accentBorder, background: result.accentSoft }}
+              >
+                <strong style={{ color: result.accent }}>관계 팁</strong>
+                <p className={styles.sectionDescription} style={{ marginTop: 8 }}>
+                  {result.tip}
+                </p>
               </div>
             </section>
           </div>
@@ -438,11 +479,13 @@ export default function TetoPage() {
             <div className={styles.sectionHeader}>
               <div>
                 <h2 className={styles.sectionTitle}>다시 테스트</h2>
-                <p className={styles.sectionDescription}>기분 상태에 따라 결과가 달라질 수 있으니 나중에 다시 비교해 볼 수 있습니다.</p>
+                <p className={styles.sectionDescription}>
+                  성별 기준을 바꿔 비교해 보거나, 나중에 다시 해도 됩니다.
+                </p>
               </div>
             </div>
             <div className={styles.actions}>
-              <button className={styles.buttonPrimary} onClick={startQuiz}>
+              <button className={styles.buttonPrimary} onClick={() => setPhase('intro')}>
                 다시 테스트하기
               </button>
             </div>
