@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { num: '03', label: '보도자료 생성기', href: '/press' },
   { num: '04', label: '이미지 프롬프트', href: '/img-prompt' },
   { num: '05', label: '녹음 변환·요약', href: '/record' },
+  { num: '10', label: '사주 로또 추출기', href: '/lotto-saju' },
   { label: 'divider', type: 'divider' },
   { label: 'Community', type: 'section' },
   { num: '06', label: '꿀팁 공유', href: '/tips' },

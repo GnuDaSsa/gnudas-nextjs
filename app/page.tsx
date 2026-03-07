@@ -12,6 +12,7 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '07', label: '아이디어 제안소',    href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
   { num: '08', label: '공무원 비주얼노벨', href: '/novel',      desc: '' },
   { num: '09', label: '공무원 영상',       href: '/videos',     desc: '동호회 회원 영상 공유' },
+  { num: '10', label: '사주 로또 추출기',  href: '/lotto-saju', desc: '사주 오행 + 회차 기록 기반 재미용 번호 생성' },
 ];
 
 const PASSIVE_ACTIVITIES = [
