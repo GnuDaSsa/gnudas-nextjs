@@ -1,13 +1,34 @@
 'use client';
 import { useState } from 'react';
 
-const STYLES = ['사실적 (Photorealistic)', '시네마틱 (Cinematic)', '초현실적 (Surreal)', '애니메이션 (Anime)', '수채화 (Watercolor)'];
-const RATIOS = ['1:1', '16:9', '4:3', '3:4', '9:16'];
+const STYLES = [
+  '사실적 (Photorealistic)',
+  '시네마틱 (Cinematic)',
+  '초현실적 (Surreal)',
+  '애니메이션 (Anime)',
+  '수채화 (Watercolor)',
+  '유화 (Oil Painting)',
+  '사이버펑크 (Cyberpunk)',
+  '판타지 (Fantasy Art)',
+  '미니멀 (Minimalist)',
+  '빈티지 (Vintage Film)',
+  '팝아트 (Pop Art)',
+  '스케치 (Pencil Sketch)',
+  '픽셀아트 (Pixel Art)',
+  '3D 렌더 (3D Render)',
+  '수묵화 (Ink Wash)',
+];
+
+const RATIOS = [
+  { label: '숏폼용 (9:16)', value: '9:16' },
+  { label: '롱폼용 (16:9)', value: '16:9' },
+  { label: '정방형 (1:1)', value: '1:1' },
+];
 
 export default function ImgPromptPage() {
   const [input, setInput] = useState('');
   const [style, setStyle] = useState(STYLES[0]);
-  const [ratio, setRatio] = useState(RATIOS[0]);
+  const [ratio, setRatio] = useState('9:16');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
@@ -84,6 +105,10 @@ export default function ImgPromptPage() {
     }
   }
 
+  const promptJson = generatedPrompt
+    ? JSON.stringify({ prompt: generatedPrompt }, null, 2)
+    : '';
+
   return (
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.4rem' }}>AI 이미지 생성기</h1>
@@ -108,9 +133,28 @@ export default function ImgPromptPage() {
           </div>
           <div>
             <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem', display: 'block', marginBottom: 4 }}>비율</label>
-            <select style={{ ...inputStyle, cursor: 'pointer' }} value={ratio} onChange={e => setRatio(e.target.value)}>
-              {RATIOS.map(r => <option key={r} value={r} style={{ background: '#0c1242' }}>{r}</option>)}
-            </select>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {RATIOS.map(r => (
+                <button
+                  key={r.value}
+                  onClick={() => setRatio(r.value)}
+                  style={{
+                    flex: 1,
+                    background: ratio === r.value ? 'rgba(117,232,255,0.18)' : 'rgba(255,255,255,0.04)',
+                    border: ratio === r.value ? '1px solid rgba(117,232,255,0.6)' : '1px solid rgba(125,187,255,0.2)',
+                    borderRadius: 8,
+                    color: ratio === r.value ? '#75e8ff' : '#8db9ff',
+                    padding: '0.45rem 0.3rem',
+                    cursor: 'pointer',
+                    fontSize: '0.78rem',
+                    fontWeight: ratio === r.value ? 700 : 400,
+                    textAlign: 'center',
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -128,10 +172,30 @@ export default function ImgPromptPage() {
         <>
           <div style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontWeight: 800, color: '#75e8ff' }}>생성된 프롬프트</div>
-              <button onClick={() => copyText(generatedPrompt)} style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
+              <div style={{ fontWeight: 800, color: '#75e8ff', fontFamily: 'monospace', fontSize: '0.85rem' }}>prompt.json</div>
+              <button onClick={() => copyText(promptJson)} style={{ background: 'rgba(117,232,255,0.15)', border: '1px solid rgba(117,232,255,0.3)', borderRadius: 6, color: '#75e8ff', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>복사</button>
             </div>
-            <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.6, wordBreak: 'break-word' }}>{generatedPrompt}</div>
+            <pre style={{
+              margin: 0,
+              padding: '0.9rem',
+              background: 'rgba(0,0,0,0.35)',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.07)',
+              fontFamily: 'monospace',
+              fontSize: '0.82rem',
+              color: '#a8d8ff',
+              lineHeight: 1.65,
+              wordBreak: 'break-word',
+              whiteSpace: 'pre-wrap',
+              overflowX: 'auto',
+            }}>
+              <span style={{ color: '#666' }}>{'{'}</span>{'\n'}
+              <span style={{ color: '#666' }}>{'  '}</span>
+              <span style={{ color: '#f97316' }}>&quot;prompt&quot;</span>
+              <span style={{ color: '#888' }}>: </span>
+              <span style={{ color: '#a8e6cf' }}>&quot;{generatedPrompt}&quot;</span>{'\n'}
+              <span style={{ color: '#666' }}>{'}'}</span>
+            </pre>
           </div>
 
           {/* API 키 입력 */}
@@ -142,9 +206,9 @@ export default function ImgPromptPage() {
               </label>
               <button
                 onClick={() => { setIsAdmin(v => !v); setApiKey(''); setAdminPassword(''); }}
-                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: isAdmin ? '#75e8ff' : '#666', padding: '0.2rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: isAdmin ? '#75e8ff' : '#555', padding: '0.2rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
               >
-                {isAdmin ? '관리자 모드' : '관리자'}
+                {isAdmin ? '관리자 모드 ✓' : '관리자'}
               </button>
             </div>
             <input
@@ -155,7 +219,7 @@ export default function ImgPromptPage() {
               onChange={e => isAdmin ? setAdminPassword(e.target.value) : setApiKey(e.target.value)}
             />
             {!isAdmin && (
-              <p style={{ fontSize: '0.78rem', color: '#556', marginTop: 6 }}>
+              <p style={{ fontSize: '0.78rem', color: '#445', marginTop: 6 }}>
                 Google AI Studio에서 발급받은 API 키를 입력하세요. 키는 서버에 저장되지 않습니다.
               </p>
             )}
