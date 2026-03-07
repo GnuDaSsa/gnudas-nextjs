@@ -1,18 +1,19 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
-  { num: '01', label: 'MBTI 검사기',       href: '/mbti',       desc: 'GPT 기반 성격 유형 분석' },
-  { num: '02', label: '테토에겐 테스트',    href: '/teto',       desc: '감수성 유형 진단' },
-  { num: '03', label: '보도자료 생성기',    href: '/press',      desc: 'AI 작성 보도자료 초안' },
-  { num: '04', label: '이미지 프롬프트',    href: '/img-prompt', desc: '프롬프트 변환 + 이미지 생성' },
-  { num: '05', label: '녹음 변환·요약',     href: '/record',     desc: '음성 → 텍스트 + 요약' },
-  { num: '06', label: '꿀팁 공유',          href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
-  { num: '07', label: '아이디어 제안소',    href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
-  { num: '08', label: '공무원 비주얼노벨', href: '/novel',      desc: '' },
-  { num: '09', label: '공무원 영상',       href: '/videos',     desc: '동호회 회원 영상 공유' },
-  { num: '10', label: '사주 로또 추출기',  href: '/lotto-saju', desc: '사주 오행 + 회차 기록 기반 재미용 번호 생성' },
+const TOOLS: { label: string; href: string; desc: string }[] = [
+  { label: 'MBTI 검사기', href: '/mbti', desc: 'GPT 기반 성격 유형 분석' },
+  { label: '테토에겐 테스트', href: '/teto', desc: '감수성 유형 진단' },
+  { label: '보도자료 생성기', href: '/press', desc: 'AI 작성 보도자료 초안' },
+  { label: '이미지 프롬프트', href: '/img-prompt', desc: '프롬프트 변환 + 이미지 생성' },
+  { label: '녹음 변환·요약', href: '/record', desc: '음성 → 텍스트 + 요약' },
+  { label: '꿀팁 공유', href: '/tips', desc: '게시판형 꿀팁 커뮤니티' },
+  { label: '아이디어 제안소', href: '/ideas', desc: '상태/투표 기반 제안 게시판' },
+  { label: '공무원 비주얼노벨', href: '/novel', desc: '' },
+  { label: '공무원 영상', href: '/videos', desc: '동호회 회원 영상 공유' },
+  { label: '사주 로또 추출기', href: '/lotto-saju', desc: '사주 오행 + 회차 기록 기반 재미용 번호 생성' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -135,13 +136,14 @@ export default function HomePage() {
           padding: '1.1rem 2rem',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
-          <span style={{
+          <Link href="/" style={{
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '1rem',
             color: '#f0f0f0',
             letterSpacing: '0.08em',
-          }}>DLC</span>
+            textDecoration: 'none',
+          }}>DLC</Link>
           <span style={{
             fontFamily: 'monospace',
             fontSize: '0.78rem',
@@ -245,7 +247,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>9 items</span>
+            }}>{TOOLS.length} items</span>
           </div>
 
           {/* 번호 목록 */}
@@ -259,7 +261,7 @@ export default function HomePage() {
                 onMouseLeave={() => setHoveredTool(null)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '3rem 1fr auto',
+                  gridTemplateColumns: '1fr auto',
                   alignItems: 'center',
                   gap: '1rem',
                   padding: '0.9rem 0.75rem',
@@ -268,15 +270,6 @@ export default function HomePage() {
                   borderRadius: 4,
                 }}
               >
-                {/* 번호 */}
-                <span style={{
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  color: hoveredTool === i ? '#75e8ff' : '#444',
-                  letterSpacing: '0.04em',
-                  transition: 'color 0.18s ease',
-                }}>{tool.num}</span>
-
                 {/* 이름 + 설명 */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem', flexWrap: 'wrap' }}>
                   <span style={{

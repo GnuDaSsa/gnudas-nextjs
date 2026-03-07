@@ -6,19 +6,19 @@ import { useState } from 'react';
 
 const NAV_ITEMS = [
   { label: 'Tools', type: 'section' },
-  { num: '00', label: 'Home', href: '/' },
-  { num: '01', label: 'MBTI 검사기', href: '/mbti' },
-  { num: '02', label: '테토에겐 테스트', href: '/teto' },
-  { num: '03', label: '보도자료 생성기', href: '/press' },
-  { num: '04', label: '이미지 프롬프트', href: '/img-prompt' },
-  { num: '05', label: '녹음 변환·요약', href: '/record' },
-  { num: '10', label: '사주 로또 추출기', href: '/lotto-saju' },
+  { label: 'Home', href: '/' },
+  { label: 'MBTI 검사기', href: '/mbti' },
+  { label: '테토에겐 테스트', href: '/teto' },
+  { label: '보도자료 생성기', href: '/press' },
+  { label: '이미지 프롬프트', href: '/img-prompt' },
+  { label: '녹음 변환·요약', href: '/record' },
+  { label: '사주 로또 추출기', href: '/lotto-saju' },
   { label: 'divider', type: 'divider' },
   { label: 'Community', type: 'section' },
-  { num: '06', label: '꿀팁 공유', href: '/tips' },
-  { num: '07', label: '아이디어 제안소', href: '/ideas' },
-  { num: '08', label: '공무원 비주얼노벨', href: '/novel' },
-  { num: '09', label: '공무원 영상', href: '/videos' },
+  { label: '꿀팁 공유', href: '/tips' },
+  { label: '아이디어 제안소', href: '/ideas' },
+  { label: '공무원 비주얼노벨', href: '/novel' },
+  { label: '공무원 영상', href: '/videos' },
 ];
 
 export default function Sidebar() {
@@ -94,8 +94,11 @@ export default function Sidebar() {
 
       <div className="sidebar-shell">
         <aside className={`sidebar-panel ${open ? 'open' : ''}`}>
-          <div
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
             style={{
+              display: 'block',
               padding: '1.1rem 1.4rem',
               borderBottom: '1px solid rgba(255,255,255,0.08)',
               fontFamily: 'monospace',
@@ -103,10 +106,11 @@ export default function Sidebar() {
               fontSize: '0.95rem',
               color: '#f0f0f0',
               letterSpacing: '0.08em',
+              textDecoration: 'none',
             }}
           >
             DLC
-          </div>
+          </Link>
 
           <nav style={{ padding: '0.8rem 0', flex: 1 }}>
             {NAV_ITEMS.map((item, i) => {
@@ -155,17 +159,6 @@ export default function Sidebar() {
                     borderLeft: active ? '2px solid #75e8ff' : '2px solid transparent',
                   }}
                 >
-                  <span
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.65rem',
-                      color: active ? '#75e8ff' : '#444',
-                      letterSpacing: '0.04em',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.num}
-                  </span>
                   <span
                     style={{
                       fontSize: '0.85rem',

@@ -146,59 +146,41 @@ function OptionButton({
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 export default function TetoPage() {
   const [phase, setPhase] = useState<'intro' | 'quiz' | 'result'>('intro');
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null); // 0=테토, 1=에겐
-  const [answers, setAnswers] = useState<number[]>([]); // 0=테토, 1=에겐
+  const [answers, setAnswers] = useState<Array<number | null>>([]); // 0=테토, 1=에겐
   const [resultKey, setResultKey] = useState<'teto' | 'egen' | 'balance' | null>(null);
   const [tetoCount, setTetoCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function startQuiz() {
-    setCurrent(0);
-    setSelected(null);
-    setAnswers([]);
+    setAnswers(Array.from({ length: QUESTIONS.length }, () => null));
     setResultKey(null);
     setSaved(false);
     setPhase('quiz');
   }
 
-  function handleSelect(idx: number) {
-    setSelected(idx);
+  function handleSelect(questionIndex: number, optionIndex: number) {
+    setAnswers((prev) => prev.map((value, index) => (index === questionIndex ? optionIndex : value)));
   }
 
-  function handleNext() {
-    if (selected === null) return;
-    const newAnswers = [...answers, selected];
-
-    if (current < QUESTIONS.length - 1) {
-      setAnswers(newAnswers);
-      setCurrent((c) => c + 1);
-      setSelected(null);
-    } else {
-      // 결과 계산
-      const tCount = newAnswers.filter((a) => a === 0).length;
-      const eCount = newAnswers.filter((a) => a === 1).length;
-      setTetoCount(tCount);
-
-      let key: 'teto' | 'egen' | 'balance';
-      if (tCount >= 7) key = 'teto';
-      else if (eCount >= 7) key = 'egen';
-      else key = 'balance';
-
-      setResultKey(key);
-      setPhase('result');
-      saveResult(key, tCount, eCount);
+  function handleSubmitQuiz() {
+    if (answers.some((answer) => answer === null)) {
+      return;
     }
-  }
 
-  function handlePrev() {
-    if (current === 0) return;
-    const prevAnswers = [...answers];
-    prevAnswers.pop();
-    setAnswers(prevAnswers);
-    setCurrent((c) => c - 1);
-    setSelected(answers[current - 1] ?? null);
+    const resolvedAnswers = answers as number[];
+    const tCount = resolvedAnswers.filter((answer) => answer === 0).length;
+    const eCount = resolvedAnswers.filter((answer) => answer === 1).length;
+    setTetoCount(tCount);
+
+    let key: 'teto' | 'egen' | 'balance';
+    if (tCount >= 7) key = 'teto';
+    else if (eCount >= 7) key = 'egen';
+    else key = 'balance';
+
+    setResultKey(key);
+    setPhase('result');
+    saveResult(key, tCount, eCount);
   }
 
   async function saveResult(key: string, tCount: number, eCount: number) {
@@ -217,7 +199,8 @@ export default function TetoPage() {
     }
   }
 
-  const progress = Math.round((current / QUESTIONS.length) * 100);
+  const answeredCount = answers.filter((answer) => answer !== null).length;
+  const progress = Math.round((answeredCount / QUESTIONS.length) * 100);
   const result = resultKey ? RESULTS[resultKey] : null;
 
   // ── 인트로 ───────────────────────────────────────────────────────
@@ -287,24 +270,23 @@ export default function TetoPage() {
 
   // ── 퀴즈 ─────────────────────────────────────────────────────────
   if (phase === 'quiz') {
-    const q = QUESTIONS[current];
     return (
       <ToolShell
         eyebrow="Personality Snapshot"
-        title={`테토에겐 ${current + 1}/${QUESTIONS.length}`}
-        description="한 질문씩 집중해서 응답하도록 구성했습니다."
-        badges={['Short Form', 'Binary Choice']}
+        title="테토에겐 테스트"
+        description="MBTI처럼 문항별로 바로 선택하고 한 번에 결과를 확인하는 방식으로 바꿨습니다."
+        badges={['11 Questions', 'Binary Choice', 'One Page']}
         meta={[
           { label: 'Progress', value: `${progress}% 완료` },
-          { label: 'Current', value: `Q ${current + 1}` },
-          { label: 'Mode', value: '빠른 직감 응답' },
+          { label: 'Answered', value: `${answeredCount}/${QUESTIONS.length}` },
+          { label: 'Mode', value: '문항별 즉시 선택' },
         ]}
         main={
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2 className={styles.sectionTitle}>질문</h2>
-                <p className={styles.sectionDescription}>{q.question}</p>
+                <h2 className={styles.sectionTitle}>질문 목록</h2>
+                <p className={styles.sectionDescription}>각 문항에서 더 가까운 쪽을 바로 고르면 됩니다. 탭 이동 없이 연속으로 체크할 수 있습니다.</p>
               </div>
             </div>
 
@@ -313,22 +295,49 @@ export default function TetoPage() {
             </div>
 
             <div className={styles.stack}>
-              <OptionButton text={q.options[0]} selected={selected === 0} onClick={() => handleSelect(0)} />
-              <OptionButton text={q.options[1]} selected={selected === 1} onClick={() => handleSelect(1)} />
+              {QUESTIONS.map((question, questionIndex) => (
+                <article
+                  key={question.question}
+                  className={styles.splitItem}
+                  style={{
+                    display: 'grid',
+                    gap: 14,
+                    borderColor: 'rgba(69, 101, 149, 0.18)',
+                    background: 'rgba(255,255,255,0.68)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>
+                      Q{questionIndex + 1}
+                    </div>
+                    <p className={styles.sectionDescription} style={{ marginTop: 8, color: '#11243d', fontWeight: 700 }}>
+                      {question.question}
+                    </p>
+                  </div>
+
+                  <div className={styles.stack}>
+                    <OptionButton
+                      text={question.options[0]}
+                      selected={answers[questionIndex] === 0}
+                      onClick={() => handleSelect(questionIndex, 0)}
+                    />
+                    <OptionButton
+                      text={question.options[1]}
+                      selected={answers[questionIndex] === 1}
+                      onClick={() => handleSelect(questionIndex, 1)}
+                    />
+                  </div>
+                </article>
+              ))}
             </div>
 
             <div className={styles.actions}>
-              {current > 0 ? (
-                <button className={styles.buttonSecondary} onClick={handlePrev}>
-                  이전
-                </button>
-              ) : null}
               <button
-                className={selected !== null ? styles.buttonPrimary : styles.buttonGhost}
-                onClick={handleNext}
-                disabled={selected === null}
+                className={answeredCount === QUESTIONS.length ? styles.buttonPrimary : styles.buttonGhost}
+                onClick={handleSubmitQuiz}
+                disabled={answeredCount !== QUESTIONS.length}
               >
-                {current === QUESTIONS.length - 1 ? '결과 보기' : '다음'}
+                결과 보기
               </button>
             </div>
           </section>

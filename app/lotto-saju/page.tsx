@@ -34,10 +34,54 @@ type ApiResponse = {
 
 const INITIAL_FORM = {
   name: '',
-  birthDate: '',
-  birthTime: '12:00',
+  birthDateText: '',
+  birthTimeText: '12:00',
+  birthMeridiem: 'PM' as 'AM' | 'PM',
   ticketCount: '5',
 };
+
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function formatDateInput(value: string) {
+  const digits = digitsOnly(value).slice(0, 8);
+  if (digits.length <= 4) {
+    return digits;
+  }
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+}
+
+function formatTimeInput(value: string) {
+  const digits = digitsOnly(value).slice(0, 4);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+}
+
+function to24HourTime(timeText: string, meridiem: 'AM' | 'PM') {
+  const matched = timeText.match(/^(\d{1,2}):(\d{2})$/);
+  if (!matched) {
+    return null;
+  }
+
+  const hour12 = Number(matched[1]);
+  const minute = Number(matched[2]);
+  if (hour12 < 1 || hour12 > 12 || minute < 0 || minute > 59) {
+    return null;
+  }
+
+  let hour24 = hour12 % 12;
+  if (meridiem === 'PM') {
+    hour24 += 12;
+  }
+
+  return `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
 
 function NumberBall({ num, accent = false }: { num: number; accent?: boolean }) {
   return (
@@ -74,6 +118,19 @@ export default function LottoSajuPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const birthDate = formatDateInput(form.birthDateText);
+    const birthTime = to24HourTime(form.birthTimeText, form.birthMeridiem);
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      setError('생년월일을 8자리로 입력해 주세요. 예: 19990421');
+      return;
+    }
+
+    if (!birthTime) {
+      setError('출생 시간은 오전/오후와 함께 hh:mm 형식으로 입력해 주세요. 예: 오전 09:30');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -85,8 +142,8 @@ export default function LottoSajuPage() {
         },
         body: JSON.stringify({
           name: form.name,
-          birthDate: form.birthDate,
-          birthTime: form.birthTime || undefined,
+          birthDate,
+          birthTime,
           ticketCount: Number(form.ticketCount),
         }),
       });
@@ -158,21 +215,61 @@ export default function LottoSajuPage() {
                   <span className={styles.label}>생년월일</span>
                   <input
                     required
-                    type="date"
+                    inputMode="numeric"
                     className={styles.input}
-                    value={form.birthDate}
-                    onChange={(event) => setForm((prev) => ({ ...prev, birthDate: event.target.value }))}
+                    value={form.birthDateText}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, birthDateText: formatDateInput(event.target.value) }))
+                    }
+                    placeholder="1999-04-21 또는 19990421"
                   />
                 </label>
 
                 <label>
                   <span className={styles.label}>출생 시간</span>
-                  <input
-                    type="time"
-                    className={styles.input}
-                    value={form.birthTime}
-                    onChange={(event) => setForm((prev) => ({ ...prev, birthTime: event.target.value }))}
-                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: '112px minmax(0, 1fr)', gap: 10 }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: 8,
+                      }}
+                    >
+                      {(['AM', 'PM'] as const).map((meridiem) => {
+                        const active = form.birthMeridiem === meridiem;
+                        return (
+                          <button
+                            key={meridiem}
+                            type="button"
+                            onClick={() => setForm((prev) => ({ ...prev, birthMeridiem: meridiem }))}
+                            style={{
+                              borderRadius: 16,
+                              border: active
+                                ? '1px solid rgba(37,99,235,0.5)'
+                                : '1px solid rgba(88,112,145,0.18)',
+                              background: active
+                                ? 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.12))'
+                                : 'rgba(255,255,255,0.88)',
+                              color: active ? '#1d4ed8' : '#475569',
+                              fontWeight: 800,
+                              fontSize: 14,
+                            }}
+                          >
+                            {meridiem === 'AM' ? '오전' : '오후'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <input
+                      inputMode="numeric"
+                      className={styles.input}
+                      value={form.birthTimeText}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, birthTimeText: formatTimeInput(event.target.value) }))
+                      }
+                      placeholder="09:30 또는 0930"
+                    />
+                  </div>
                 </label>
               </div>
 
