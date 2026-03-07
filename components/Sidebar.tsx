@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { num: '06', label: '꿀팁 공유', href: '/tips' },
   { num: '07', label: '아이디어 제안소', href: '/ideas' },
   { num: '08', label: '공무원 비주얼노벨', href: '/novel' },
+  { num: '09', label: '공무원 영상', href: '/videos' },
 ];
 
 export default function Sidebar() {

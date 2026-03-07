@@ -11,6 +11,7 @@ const TOOLS: { num: string; label: string; href: string; desc: string }[] = [
   { num: '06', label: '꿀팁 공유',          href: '/tips',       desc: '게시판형 꿀팁 커뮤니티' },
   { num: '07', label: '아이디어 제안소',    href: '/ideas',      desc: '상태/투표 기반 제안 게시판' },
   { num: '08', label: '공무원 비주얼노벨', href: '/novel',      desc: '' },
+  { num: '09', label: '공무원 영상',       href: '/videos',     desc: '동호회 회원 영상 공유' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -243,7 +244,7 @@ export default function HomePage() {
               fontSize: '0.72rem',
               color: '#888',
               letterSpacing: '0.06em',
-            }}>8 items</span>
+            }}>9 items</span>
           </div>
 
           {/* 번호 목록 */}
