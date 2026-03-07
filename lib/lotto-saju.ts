@@ -31,6 +31,7 @@ type GeneratedTicket = {
   numbers: number[];
   angle: string;
   emphasis: string;
+  reasons: { number: number; elementLabel: string; why: string }[];
 };
 
 const STEM_TO_ELEMENT: ElementKey[] = [
@@ -119,6 +120,10 @@ const FALLBACK_DRAWS: LottoDraw[] = [
 
 function numberElement(num: number): ElementKey {
   return ELEMENTS[(num - 1) % 5];
+}
+
+function groupNumbersByElement(element: ElementKey) {
+  return Array.from({ length: 45 }, (_, index) => index + 1).filter((num) => numberElement(num) === element);
 }
 
 function formatKoreanDate(input: string) {
@@ -462,10 +467,35 @@ function generateTickets(
       .slice(0, 3)
       .join(' · ');
 
+    const reasons = numbers.map((num) => {
+      const element = numberElement(num);
+      const recencyGap = stats.lastSeen[num] === -1 ? 18 : stats.latestIndex - stats.lastSeen[num];
+      let why = '균형 보정';
+
+      if (element === favored[0]) {
+        why = '주요 오행 가중치';
+      } else if (element === favored[1]) {
+        why = '보조 오행 가중치';
+      } else if (stats.freq12[num] === 0 || recencyGap >= 8) {
+        why = '최근 미출현 반등';
+      } else if (stats.freq12[num] >= 3) {
+        why = '최근 빈도 반영';
+      } else if (element === cautious) {
+        why = '주의 오행이지만 분산용 채택';
+      }
+
+      return {
+        number: num,
+        elementLabel: ELEMENT_LABEL[element],
+        why,
+      };
+    });
+
     tickets.push({
       numbers,
       angle: angleTexts[tickets.length] ?? '균형형',
       emphasis,
+      reasons,
     });
   }
 
@@ -488,6 +518,11 @@ function generateTickets(
           .map((num) => `${num}(${ELEMENT_LABEL[numberElement(num)]})`)
           .slice(0, 3)
           .join(' · '),
+        reasons: numbers.map((num) => ({
+          number: num,
+          elementLabel: ELEMENT_LABEL[numberElement(num)],
+          why: numberElement(num) === favored[0] ? '주요 오행 우선 선별' : '상위 가중치 fallback',
+        })),
       });
     }
   }
@@ -537,6 +572,13 @@ export async function buildLottoSaju(input: LottoSajuInput) {
       },
       summary: `${ELEMENT_LABEL[dominant]} 기운이 가장 도드라지고 ${ELEMENT_LABEL[support]} 흐름이 이를 받쳐주는 패턴으로 읽었습니다.`,
       disclaimer: '정밀한 사주명식이 아니라 양력 생년월일·시간을 바탕으로 간지/오행 리듬을 가볍게 추정한 엔터테인먼트용 계산입니다.',
+      connectionGuide: {
+        rule: '번호 1~45를 수→목→화→토→금 순환 오행으로 배정한 뒤, 사주에서 강한 오행과 보조 오행에 해당하는 숫자군에 기본 가중치를 줍니다.',
+        dominantNumbers: groupNumbersByElement(dominant),
+        supportNumbers: groupNumbersByElement(support),
+        cautiousNumbers: groupNumbersByElement(cautious),
+        summary: `${ELEMENT_LABEL[dominant]} 오행 숫자군을 우선 보고, ${ELEMENT_LABEL[support]} 숫자군을 보강한 뒤, 최근 12회/52회 빈도와 장기 미출현 번호를 함께 섞어 조합했습니다.`,
+      },
     },
     history: {
       source: history.source,

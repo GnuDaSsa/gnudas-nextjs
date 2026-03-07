@@ -15,6 +15,13 @@ type ApiResponse = {
     cautiousElement: { label: string; description: string };
     summary: string;
     disclaimer: string;
+    connectionGuide: {
+      rule: string;
+      dominantNumbers: number[];
+      supportNumbers: number[];
+      cautiousNumbers: number[];
+      summary: string;
+    };
   };
   history: {
     source: string;
@@ -29,7 +36,12 @@ type ApiResponse = {
     drawNo: number;
     dateLabel: string;
   };
-  tickets: { numbers: number[]; angle: string; emphasis: string }[];
+  tickets: {
+    numbers: number[];
+    angle: string;
+    emphasis: string;
+    reasons: { number: number; elementLabel: string; why: string }[];
+  }[];
 };
 
 const INITIAL_FORM = {
@@ -367,6 +379,56 @@ export default function LottoSajuPage() {
               <section className={styles.surface}>
                 <div className={styles.sectionHeader}>
                   <div>
+                    <h2 className={styles.sectionTitle}>사주와 숫자 연결 해설</h2>
+                    <p className={styles.sectionDescription}>{result.profile.connectionGuide.summary}</p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: 18,
+                    borderRadius: 20,
+                    background: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(59,130,246,0.12)',
+                    color: '#334155',
+                    lineHeight: 1.7,
+                    fontSize: 14,
+                  }}
+                >
+                  {result.profile.connectionGuide.rule}
+                </div>
+
+                <div className={styles.grid3} style={{ marginTop: 16 }}>
+                  {[
+                    ['주요 오행 숫자군', result.profile.connectionGuide.dominantNumbers],
+                    ['보조 오행 숫자군', result.profile.connectionGuide.supportNumbers],
+                    ['주의 오행 숫자군', result.profile.connectionGuide.cautiousNumbers],
+                  ].map(([label, values]) => (
+                    <div
+                      key={String(label)}
+                      style={{
+                        borderRadius: 20,
+                        padding: 18,
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.94), rgba(239,246,255,0.76))',
+                        border: '1px solid rgba(59,130,246,0.12)',
+                      }}
+                    >
+                      <div style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>
+                        {label}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                        {(values as number[]).map((num) => (
+                          <NumberBall key={`${label}-${num}`} num={num} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className={styles.surface}>
+                <div className={styles.sectionHeader}>
+                  <div>
                     <h2 className={styles.sectionTitle}>이번 주 추천 번호</h2>
                     <p className={styles.sectionDescription}>
                       {result.target.drawNo}회차 ({result.target.dateLabel}) 기준으로 생성된 조합입니다.
@@ -400,6 +462,34 @@ export default function LottoSajuPage() {
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
                         {ticket.numbers.map((num) => (
                           <NumberBall key={num} num={num} />
+                        ))}
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                          gap: 10,
+                          marginTop: 16,
+                        }}
+                      >
+                        {ticket.reasons.map((reason) => (
+                          <div
+                            key={`${ticket.numbers.join('-')}-${reason.number}`}
+                            style={{
+                              padding: 12,
+                              borderRadius: 16,
+                              background: 'rgba(255,255,255,0.68)',
+                              border: '1px solid rgba(59,130,246,0.1)',
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                              {reason.number} · {reason.elementLabel}
+                            </div>
+                            <div style={{ marginTop: 4, fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
+                              {reason.why}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </article>
