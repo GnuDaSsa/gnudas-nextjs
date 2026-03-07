@@ -4,8 +4,18 @@ import { GoogleGenAI } from '@google/genai';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
-  const { prompt, aspectRatio } = await req.json();
+  const { prompt, aspectRatio, apiKey, adminPassword } = await req.json();
+
+  let resolvedKey: string;
+  if (adminPassword && adminPassword === process.env.ADMIN_PASSWORD) {
+    resolvedKey = process.env.GOOGLE_API_KEY || '';
+  } else if (apiKey) {
+    resolvedKey = apiKey;
+  } else {
+    return NextResponse.json({ error: 'API 키 또는 관리자 비밀번호가 필요합니다.' }, { status: 401 });
+  }
+
+  const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
   try {
     const imageRes = await ai.models.generateImages({

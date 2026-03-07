@@ -12,6 +12,10 @@ export default function ImgPromptPage() {
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
   const [loadingImage, setLoadingImage] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [imageError, setImageError] = useState('');
 
   const cardStyle = {
     borderRadius: 14,
@@ -41,6 +45,7 @@ export default function ImgPromptPage() {
     setLoadingPrompt(true);
     setGeneratedPrompt('');
     setImageDataUrl(null);
+    setImageError('');
     try {
       const res = await fetch('/api/img-prompt', {
         method: 'POST',
@@ -56,16 +61,24 @@ export default function ImgPromptPage() {
 
   async function generateImage() {
     if (!generatedPrompt) return;
+    if (!isAdmin && !apiKey.trim()) return;
+    if (isAdmin && !adminPassword.trim()) return;
     setLoadingImage(true);
     setImageDataUrl(null);
+    setImageError('');
     try {
+      const body: Record<string, string> = { prompt: generatedPrompt, aspectRatio: ratio };
+      if (isAdmin) body.adminPassword = adminPassword;
+      else body.apiKey = apiKey;
+
       const res = await fetch('/api/img-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: generatedPrompt, aspectRatio: ratio }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      setImageDataUrl(data.imageDataUrl || null);
+      if (data.error) setImageError(data.error);
+      else setImageDataUrl(data.imageDataUrl || null);
     } finally {
       setLoadingImage(false);
     }
@@ -110,7 +123,7 @@ export default function ImgPromptPage() {
         </button>
       </div>
 
-      {/* STEP 2 — 프롬프트 결과 */}
+      {/* STEP 2 */}
       {generatedPrompt && (
         <>
           <div style={cardStyle}>
@@ -120,6 +133,39 @@ export default function ImgPromptPage() {
             </div>
             <div style={{ color: '#eef4ff', fontSize: '0.9rem', lineHeight: 1.6, wordBreak: 'break-word' }}>{generatedPrompt}</div>
           </div>
+
+          {/* API 키 입력 */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <label style={{ fontWeight: 700, color: '#8db9ff', fontSize: '0.9rem' }}>
+                {isAdmin ? '관리자 비밀번호' : 'Google AI API 키'}
+              </label>
+              <button
+                onClick={() => { setIsAdmin(v => !v); setApiKey(''); setAdminPassword(''); }}
+                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: isAdmin ? '#75e8ff' : '#666', padding: '0.2rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+              >
+                {isAdmin ? '관리자 모드' : '관리자'}
+              </button>
+            </div>
+            <input
+              type="password"
+              style={inputStyle}
+              placeholder={isAdmin ? '관리자 비밀번호 입력' : 'AIza...로 시작하는 Google AI API 키'}
+              value={isAdmin ? adminPassword : apiKey}
+              onChange={e => isAdmin ? setAdminPassword(e.target.value) : setApiKey(e.target.value)}
+            />
+            {!isAdmin && (
+              <p style={{ fontSize: '0.78rem', color: '#556', marginTop: 6 }}>
+                Google AI Studio에서 발급받은 API 키를 입력하세요. 키는 서버에 저장되지 않습니다.
+              </p>
+            )}
+          </div>
+
+          {imageError && (
+            <div style={{ ...cardStyle, border: '1px solid rgba(255,80,80,0.3)', color: '#ff8080', fontSize: '0.9rem' }}>
+              {imageError}
+            </div>
+          )}
 
           <button
             style={{ background: 'linear-gradient(90deg,#f97316,#ec4899)', color: '#fff', fontWeight: 800, border: 'none', borderRadius: 10, padding: '0.65rem 1.4rem', cursor: loadingImage ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: loadingImage ? 0.7 : 1, marginBottom: '1rem', width: '100%' }}
@@ -131,7 +177,6 @@ export default function ImgPromptPage() {
         </>
       )}
 
-      {/* 생성된 이미지 */}
       {imageDataUrl && (
         <div style={cardStyle}>
           <div style={{ fontWeight: 800, color: '#75e8ff', marginBottom: 10 }}>Generated Image</div>
