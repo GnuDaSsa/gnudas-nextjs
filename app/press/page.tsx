@@ -9,6 +9,7 @@ export default function PressPage() {
   const [result, setResult] = useState('');
   const [titles, setTitles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function generate() {
     if (!form.담당부서 || !form.내용 || !form.담당자 || !form.연락처) {
@@ -19,6 +20,7 @@ export default function PressPage() {
     setLoading(true);
     setResult('');
     setTitles([]);
+    setError('');
 
     try {
       const res = await fetch('/api/press', {
@@ -27,20 +29,19 @@ export default function PressPage() {
         body: JSON.stringify(form),
       });
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let full = '';
+      const data = await res.json();
 
-      while (reader) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        full += decoder.decode(value);
-        setResult(full);
+      if (!res.ok) {
+        setError(data.error || '초안을 생성하지 못했습니다.');
+        return;
       }
+
+      const full = data.text || '';
+      setResult(full);
 
       const titleMatches = full.match(/'([^']+)'/g);
       if (titleMatches) {
-        setTitles(titleMatches.slice(0, 5).map((title) => title.replace(/'/g, '')));
+        setTitles(titleMatches.slice(0, 5).map((title: string) => title.replace(/'/g, '')));
       }
     } finally {
       setLoading(false);
@@ -129,16 +130,17 @@ export default function PressPage() {
 
             {result ? (
               <div className={styles.resultPanel}>{result.split('보도자료 추천 제목')[0] || result}</div>
+            ) : error ? (
+              <p className={styles.emptyState} style={{ color: '#ffb4b4' }}>
+                {error}
+              </p>
             ) : (
               <p className={styles.emptyState}>
                 초안을 생성하면 이 영역에 문단형 결과가 표시됩니다.
               </p>
             )}
           </section>
-        </div>
-      }
-      side={
-        <div className={styles.stack}>
+
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>

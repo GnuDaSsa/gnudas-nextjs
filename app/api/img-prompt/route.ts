@@ -4,6 +4,10 @@ import { GoogleGenAI } from '@google/genai';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (!process.env.GOOGLE_API_KEY) {
+    return NextResponse.json({ error: 'GOOGLE_API_KEY가 설정되지 않았습니다.' }, { status: 500 });
+  }
+
   const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
   const { prompt, style, aspectRatio } = await req.json();
 

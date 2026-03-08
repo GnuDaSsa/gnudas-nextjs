@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { DragEvent, useRef, useState } from 'react';
 
 import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
 
@@ -10,6 +10,18 @@ export default function RecordPage() {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  function handleFile(nextFile: File | null) {
+    setFile(nextFile);
+  }
+
+  function handleDrop(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setDragActive(false);
+    handleFile(event.dataTransfer.files?.[0] || null);
+  }
 
   async function transcribe() {
     if (!file) return;
@@ -76,11 +88,42 @@ export default function RecordPage() {
 
             <label className={styles.label}>음성 파일 선택</label>
             <input
-              className={styles.input}
+              ref={inputRef}
+              style={{ display: 'none' }}
               type="file"
               accept="audio/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={(e) => handleFile(e.target.files?.[0] || null)}
             />
+
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              className={styles.optionButton}
+              style={{
+                minHeight: 124,
+                marginTop: 4,
+                justifyContent: 'center',
+                textAlign: 'center',
+                borderStyle: 'dashed',
+                borderColor: dragActive ? 'rgba(117, 232, 255, 0.46)' : 'rgba(255, 255, 255, 0.16)',
+                background: dragActive ? 'rgba(117, 232, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+              }}
+            >
+              <span style={{ width: '100%' }}>
+                <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: '#eef2f7' }}>
+                  파일을 드래그하거나 클릭해서 업로드
+                </span>
+                <span style={{ display: 'block', marginTop: 8, color: '#8f98a6', fontSize: 13 }}>
+                  mp3, wav, m4a, ogg 등 음성 파일 지원
+                </span>
+              </span>
+            </button>
 
             {file ? (
               <div className={styles.splitItem} style={{ marginTop: 14 }}>
@@ -128,10 +171,7 @@ export default function RecordPage() {
               <p className={styles.emptyState}>변환을 시작하면 원문 텍스트가 이 영역에 표시됩니다.</p>
             )}
           </section>
-        </div>
-      }
-      side={
-        <div className={styles.stack}>
+
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>

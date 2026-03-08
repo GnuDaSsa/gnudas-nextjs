@@ -59,6 +59,10 @@ export default function ImgPromptPage() {
         body: JSON.stringify({ prompt: input, style, aspectRatio: ratio }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setImageError(data.error || '프롬프트 생성에 실패했습니다.');
+        return;
+      }
       setGeneratedPrompt(data.prompt || '');
     } finally {
       setLoadingPrompt(false);
@@ -86,8 +90,11 @@ export default function ImgPromptPage() {
       });
       const data = await res.json();
 
-      if (data.error) setImageError(data.error);
-      else setImageDataUrl(data.imageDataUrl || null);
+      if (!res.ok || data.error) {
+        setImageError(data.error || '이미지 생성에 실패했습니다.');
+      } else {
+        setImageDataUrl(data.imageDataUrl || null);
+      }
     } finally {
       setLoadingImage(false);
     }
@@ -191,30 +198,13 @@ export default function ImgPromptPage() {
             </section>
           ) : null}
 
-          {imageDataUrl ? (
-            <section className={styles.surface}>
-              <div className={styles.sectionHeader}>
-                <div>
-                  <h2 className={styles.sectionTitle}>생성 이미지</h2>
-                  <p className={styles.sectionDescription}>프롬프트와 비율이 실제로 어떻게 반영됐는지 확인합니다.</p>
-                </div>
-              </div>
-              <img
-                src={imageDataUrl}
-                alt="생성된 이미지"
-                style={{ width: '100%', borderRadius: 24, border: '1px solid rgba(88, 112, 145, 0.14)' }}
-              />
-            </section>
-          ) : null}
-        </div>
-      }
-      side={
-        <div className={styles.stack}>
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
                 <h2 className={styles.sectionTitle}>생성 권한</h2>
-                <p className={styles.sectionDescription}>일반 사용자와 관리자 모드를 분리해 입력 실수를 줄였습니다.</p>
+                <p className={styles.sectionDescription}>
+                  이미지 생성은 사용자 API 키 또는 관리자 비밀번호 중 하나가 필요합니다.
+                </p>
               </div>
             </div>
 
@@ -256,10 +246,26 @@ export default function ImgPromptPage() {
 
             {!isAdmin ? (
               <p className={styles.emptyState} style={{ marginTop: 10 }}>
-                입력한 키는 서버에 저장되지 않습니다. 필요한 작업이 끝나면 새로고침해도 됩니다.
+                입력한 키는 저장되지 않습니다. 프롬프트 생성은 서버 키, 이미지 생성은 입력한 키 또는 관리자 키로 실행됩니다.
               </p>
             ) : null}
           </section>
+
+          {imageDataUrl ? (
+            <section className={styles.surface}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>생성 이미지</h2>
+                  <p className={styles.sectionDescription}>프롬프트와 비율이 실제로 어떻게 반영됐는지 확인합니다.</p>
+                </div>
+              </div>
+              <img
+                src={imageDataUrl}
+                alt="생성된 이미지"
+                style={{ width: '100%', borderRadius: 24, border: '1px solid rgba(88, 112, 145, 0.14)' }}
+              />
+            </section>
+          ) : null}
 
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
