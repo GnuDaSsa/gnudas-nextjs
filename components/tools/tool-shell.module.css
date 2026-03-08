@@ -327,17 +327,18 @@
 }
 
 .optionButton {
-  display: block;
+  display: flex;
   width: 100%;
-  padding: 16px 0;
-  border-radius: 0;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: transparent;
+  align-items: center;
+  min-height: 68px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
   color: #e7edf8;
   text-align: left;
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.5;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
@@ -347,14 +348,16 @@
 }
 
 .optionButton:hover {
-  transform: none;
-  border-color: rgba(117, 232, 255, 0.28);
+  transform: translateY(-1px);
+  border-color: rgba(117, 232, 255, 0.34);
+  background: rgba(117, 232, 255, 0.045);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
 .optionButtonSelected {
-  border-color: rgba(117, 232, 255, 0.28);
-  background: rgba(117, 232, 255, 0.05);
-  box-shadow: none;
+  border-color: rgba(117, 232, 255, 0.44);
+  background: rgba(117, 232, 255, 0.09);
+  box-shadow: inset 0 0 0 1px rgba(117, 232, 255, 0.08);
 }
 
 .toolList {

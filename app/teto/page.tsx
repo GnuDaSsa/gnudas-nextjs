@@ -119,9 +119,9 @@ const RESULTS: Record<ResultKey, ResultInfo> = {
     desc: '주도성, 직진력, 존재감이 전면에 드러나는 타입입니다. 관계의 흐름을 먼저 만들고, 시원한 액션으로 긴장을 끌고 가는 쪽에 가깝습니다.',
     traits: ['직진형 반응', '분명한 액션', '또렷한 존재감', '리드 성향', '선명한 호감 표현'],
     tip: '속도와 밀도가 강한 편이라 상대 템포를 한 박자 읽어주면 훨씬 매력적으로 오래 갑니다.',
-    accent: '#f97316',
-    accentSoft: 'rgba(249,115,22,0.12)',
-    accentBorder: 'rgba(249,115,22,0.28)',
+    accent: '#75e8ff',
+    accentSoft: 'rgba(117,232,255,0.10)',
+    accentBorder: 'rgba(117,232,255,0.28)',
   },
   teto_female: {
     label: '테토녀',
@@ -129,9 +129,9 @@ const RESULTS: Record<ResultKey, ResultInfo> = {
     desc: '직진성과 밝은 에너지가 있으면서도 표현 결은 더 세련되고 감각적인 타입입니다. 끌리면 먼저 보여주되, 무드와 스타일의 존재감이 함께 살아납니다.',
     traits: ['밝은 리액션', '선명한 무드', '감각적 존재감', '직진형 호감 표현', '또렷한 스타일'],
     tip: '선명한 인상이 강점이라 디테일한 배려가 보이는 순간을 같이 만들면 밸런스가 더 좋아집니다.',
-    accent: '#ec4899',
-    accentSoft: 'rgba(236,72,153,0.12)',
-    accentBorder: 'rgba(236,72,153,0.28)',
+    accent: '#c7b6ff',
+    accentSoft: 'rgba(199,182,255,0.12)',
+    accentBorder: 'rgba(199,182,255,0.28)',
   },
   egen_male: {
     label: '에겐남',
@@ -185,6 +185,7 @@ function OptionButton({
 export default function TetoPage() {
   const [phase, setPhase] = useState<'intro' | 'quiz' | 'result'>('intro');
   const [answers, setAnswers] = useState<Array<number | null>>([]);
+  const [current, setCurrent] = useState(0);
   const [resultKey, setResultKey] = useState<ResultKey | null>(null);
   const [driveScore, setDriveScore] = useState(0);
   const [toneScore, setToneScore] = useState(0);
@@ -193,26 +194,35 @@ export default function TetoPage() {
 
   function startQuiz() {
     setAnswers(Array.from({ length: QUESTIONS.length }, () => null));
+    setCurrent(0);
     setResultKey(null);
     setSaved(false);
     setPhase('quiz');
   }
 
   function handleSelect(questionIndex: number, optionIndex: number) {
-    setAnswers((prev) => prev.map((value, index) => (index === questionIndex ? optionIndex : value)));
-  }
+    const nextAnswers = answers.map((value, index) => (index === questionIndex ? optionIndex : value));
+    setAnswers(nextAnswers);
 
-  function handleSubmitQuiz() {
-    if (answers.some((answer) => answer === null)) {
+    if (questionIndex < QUESTIONS.length - 1) {
+      setTimeout(() => setCurrent((prev) => prev + 1), 180);
       return;
     }
 
-    const resolvedAnswers = answers as number[];
-    const nextDrive = resolvedAnswers.reduce(
+    handleSubmitQuiz(nextAnswers as number[]);
+  }
+
+  function handleSubmitQuiz(resolvedAnswers?: number[]) {
+    const nextAnswers = resolvedAnswers ?? (answers as number[]);
+    if (nextAnswers.some((answer) => answer === null)) {
+      return;
+    }
+
+    const nextDrive = nextAnswers.reduce(
       (sum, optionIndex, questionIndex) => sum + QUESTIONS[questionIndex].options[optionIndex].drive,
       0,
     );
-    const nextTone = resolvedAnswers.reduce(
+    const nextTone = nextAnswers.reduce(
       (sum, optionIndex, questionIndex) => sum + QUESTIONS[questionIndex].options[optionIndex].tone,
       0,
     );
@@ -247,7 +257,7 @@ export default function TetoPage() {
   }
 
   const answeredCount = answers.filter((answer) => answer !== null).length;
-  const progress = Math.round((answeredCount / QUESTIONS.length) * 100);
+  const progress = Math.round((current / QUESTIONS.length) * 100);
   const result = resultKey ? RESULTS[resultKey] : null;
   const drivePct = Math.round(((driveScore + QUESTIONS.length * 2) / (QUESTIONS.length * 4)) * 100);
   const tonePct = Math.round(((toneScore + QUESTIONS.length * 2) / (QUESTIONS.length * 4)) * 100);
@@ -293,63 +303,60 @@ export default function TetoPage() {
   }
 
   if (phase === 'quiz') {
+    const currentAnswer = answers[current];
+    const question = QUESTIONS[current];
+
     return (
       <ToolShell
         eyebrow="Personality Snapshot"
-        title="테토에겐 테스트"
+        title={`테토에겐 테스트 ${current + 1}/${QUESTIONS.length}`}
         description=""
         main={
           <section className={styles.surface}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2 className={styles.sectionTitle}>질문 목록</h2>
+                <h2 className={styles.sectionTitle}>질문</h2>
                 <p className={styles.sectionDescription}>
                   되고 싶은 캐릭터보다 실제로 반복해서 나오는 반응 쪽을 고르는 편이 더 정확합니다.
                 </p>
               </div>
-              <span className={styles.pill}>{answeredCount}/{QUESTIONS.length}</span>
+              <span className={styles.pill}>{current + 1}/{QUESTIONS.length}</span>
             </div>
 
             <div className={styles.progressTrack} style={{ marginBottom: 18 }}>
               <div className={styles.progressFill} style={{ width: `${progress}%` }} />
             </div>
 
-            <div className={styles.stack}>
-              {QUESTIONS.map((question, questionIndex) => (
-                <article key={question.question} className={styles.splitItem} style={{ display: 'grid', gap: 14 }}>
-                  <div>
-                    <div style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7f8da1' }}>
-                      Q{questionIndex + 1}
-                    </div>
-                    <p className={styles.sectionDescription} style={{ marginTop: 8, color: '#eef2f7', fontSize: 15, fontWeight: 700 }}>
-                      {question.question}
-                    </p>
-                  </div>
+            <article className={styles.splitItem} style={{ display: 'grid', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7f8da1' }}>
+                  Q{current + 1}
+                </div>
+                <p className={styles.sectionDescription} style={{ marginTop: 10, color: '#eef2f7', fontSize: 18, fontWeight: 700, maxWidth: 'none' }}>
+                  {question.question}
+                </p>
+              </div>
 
-                  <div className={styles.stack}>
-                    <OptionButton
-                      text={question.options[0].label}
-                      selected={answers[questionIndex] === 0}
-                      onClick={() => handleSelect(questionIndex, 0)}
-                    />
-                    <OptionButton
-                      text={question.options[1].label}
-                      selected={answers[questionIndex] === 1}
-                      onClick={() => handleSelect(questionIndex, 1)}
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
+              <div className={styles.stack}>
+                <OptionButton
+                  text={question.options[0].label}
+                  selected={currentAnswer === 0}
+                  onClick={() => handleSelect(current, 0)}
+                />
+                <OptionButton
+                  text={question.options[1].label}
+                  selected={currentAnswer === 1}
+                  onClick={() => handleSelect(current, 1)}
+                />
+              </div>
+            </article>
 
             <div className={styles.actions}>
-              <button
-                className={answeredCount === QUESTIONS.length ? styles.buttonPrimary : styles.buttonGhost}
-                onClick={handleSubmitQuiz}
-                disabled={answeredCount !== QUESTIONS.length}
-              >
-                결과 보기
-              </button>
+              {current > 0 ? (
+                <button className={styles.buttonSecondary} onClick={() => setCurrent((prev) => prev - 1)}>
+                  이전
+                </button>
+              ) : null}
             </div>
           </section>
         }
@@ -439,10 +446,10 @@ export default function TetoPage() {
 
               <div
                 className={styles.splitItem}
-                style={{ marginTop: 16, borderColor: result.accentBorder, background: result.accentSoft, padding: '14px 16px' }}
+                style={{ marginTop: 16, borderColor: result.accentBorder, background: result.accentSoft, padding: '18px 18px' }}
               >
                 <strong style={{ color: result.accent }}>관계 팁</strong>
-                <p className={styles.sectionDescription} style={{ marginTop: 8, color: '#d5dce7' }}>
+                <p className={styles.sectionDescription} style={{ marginTop: 8, color: '#d5dce7', maxWidth: 'none' }}>
                   {result.tip}
                 </p>
               </div>

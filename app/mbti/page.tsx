@@ -341,8 +341,8 @@ function DimBar({ labelA, labelB, pctA }: { labelA: string; labelB: string; pctA
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
-        <span style={{ color: '#1d4ed8', fontWeight: 700 }}>{labelA} {pctA}%</span>
-        <span style={{ color: '#6d7f97', fontWeight: 700 }}>{labelB} {100 - pctA}%</span>
+        <span style={{ color: '#75e8ff', fontWeight: 700 }}>{labelA} {pctA}%</span>
+        <span style={{ color: '#98a4b7', fontWeight: 700 }}>{labelB} {100 - pctA}%</span>
       </div>
       <div className={styles.progressTrack}>
         <div
@@ -507,7 +507,12 @@ export default function MbtiPage() {
                   key={choice.value}
                   onClick={() => selectAnswer(choice.value)}
                 >
-                  {choice.label}
+                  <span style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                    <span>{choice.label}</span>
+                    <span style={{ color: currentAnswer === choice.value ? '#75e8ff' : '#667386', fontSize: 12, fontFamily: 'monospace' }}>
+                      select
+                    </span>
+                  </span>
                 </button>
               ))}
             </div>
