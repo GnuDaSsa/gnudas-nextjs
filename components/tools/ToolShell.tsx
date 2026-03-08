@@ -20,7 +20,6 @@ interface ToolShellProps {
 export function ToolShell({
   eyebrow,
   title,
-  description,
   badges = [],
   meta = [],
   main,
@@ -33,10 +32,9 @@ export function ToolShell({
           <div className={styles.heroMain}>
             <div className={styles.eyebrow}>{eyebrow}</div>
             <h1 className={styles.title}>{title}</h1>
-            <p className={styles.lead}>{description}</p>
             {badges.length > 0 ? (
               <div className={styles.badgeRow}>
-                {badges.map((badge) => (
+                {badges.slice(0, 2).map((badge) => (
                   <span className={styles.badge} key={badge}>
                     {badge}
                   </span>
@@ -45,16 +43,18 @@ export function ToolShell({
             ) : null}
           </div>
 
-          <aside className={styles.heroSide}>
-            <div className={styles.metaList}>
-              {meta.map((item) => (
-                <div className={styles.metaCard} key={item.label}>
-                  <span className={styles.metaLabel}>{item.label}</span>
-                  <strong className={styles.metaValue}>{item.value}</strong>
-                </div>
-              ))}
-            </div>
-          </aside>
+          {meta.length > 0 ? (
+            <aside className={styles.heroSide}>
+              <div className={styles.metaList}>
+                {meta.slice(0, 2).map((item) => (
+                  <div className={styles.metaCard} key={item.label}>
+                    <span className={styles.metaLabel}>{item.label}</span>
+                    <strong className={styles.metaValue}>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          ) : null}
         </section>
 
         <section className={styles.content}>

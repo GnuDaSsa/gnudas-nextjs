@@ -3,17 +3,17 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const TOOLS: { label: string; href: string; desc: string }[] = [
-  { label: 'MBTI 검사기', href: '/mbti', desc: 'GPT 기반 성격 유형 분석' },
-  { label: '테토에겐 테스트', href: '/teto', desc: '감수성 유형 진단' },
-  { label: '보도자료 생성기', href: '/press', desc: 'AI 작성 보도자료 초안' },
-  { label: '이미지 프롬프트', href: '/img-prompt', desc: '프롬프트 변환 + 이미지 생성' },
-  { label: '녹음 변환·요약', href: '/record', desc: '음성 → 텍스트 + 요약' },
-  { label: '꿀팁 공유', href: '/tips', desc: '게시판형 꿀팁 커뮤니티' },
-  { label: '아이디어 제안소', href: '/ideas', desc: '상태/투표 기반 제안 게시판' },
-  { label: '공무원 비주얼노벨', href: '/novel', desc: '' },
-  { label: '공무원 영상', href: '/videos', desc: '동호회 회원 영상 공유' },
-  { label: '사주 로또 추출기', href: '/lotto-saju', desc: '사주 오행 + 회차 기록 기반 재미용 번호 생성' },
+const TOOLS: { label: string; href: string }[] = [
+  { label: 'MBTI 검사기', href: '/mbti' },
+  { label: '테토에겐 테스트', href: '/teto' },
+  { label: '보도자료 생성기', href: '/press' },
+  { label: '이미지 프롬프트', href: '/img-prompt' },
+  { label: '녹음 변환·요약', href: '/record' },
+  { label: '꿀팁 공유', href: '/tips' },
+  { label: '아이디어 제안소', href: '/ideas' },
+  { label: '공무원 비주얼노벨', href: '/novel' },
+  { label: '공무원 영상', href: '/videos' },
+  { label: '사주 로또 추출기', href: '/lotto-saju' },
 ];
 
 const PASSIVE_ACTIVITIES = [
@@ -278,11 +278,6 @@ export default function HomePage() {
                     color: hoveredTool === i ? '#f0f0f0' : '#c8c8c8',
                     transition: 'color 0.18s ease',
                   }}>{tool.label}</span>
-                  <span style={{
-                    fontSize: '0.78rem',
-                    color: '#555',
-                    fontFamily: 'monospace',
-                  }}>{tool.desc}</span>
                 </div>
 
                 {/* 화살표 */}
