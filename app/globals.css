@@ -2,13 +2,13 @@
 @import "tailwindcss";
 
 :root {
-  --text-main: #eef4ff;
-  --text-sub: #d5def3;
-  --panel: rgba(8, 10, 34, 0.42);
-  --panel-border: rgba(125, 187, 255, 0.42);
-  --cyan: #75e8ff;
-  --pink: #ff77e6;
-  --bg0: #070a1b;
+  --text-main: #eceff4;
+  --text-sub: #aeb5c1;
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --bg0: #111318;
+  --bg1: #171b23;
+  --line: rgba(255, 255, 255, 0.08);
 }
 
 body {
@@ -30,15 +30,15 @@ body {
 .anim-slideUp { animation: slideUp 0.60s cubic-bezier(0.2,0.9,0.2,1) both; }
 
 .glass-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.06));
-  border: 1px solid rgba(255,255,255,0.16);
-  box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.22);
   backdrop-filter: blur(12px);
-  border-radius: 22px;
+  border-radius: 18px;
 }
 
 .grad-text {
-  background: linear-gradient(90deg, var(--cyan), var(--pink));
+  background: linear-gradient(90deg, #f4f6f9, #9ba8bb);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

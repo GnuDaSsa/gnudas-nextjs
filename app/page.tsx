@@ -48,7 +48,6 @@ export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
   const [localWork, setLocalWork] = useState<LocalWork | null>(null);
-  const [showCodingPopup, setShowCodingPopup] = useState(false);
   const wasCodingRef = useRef(false);
   const router = useRouter();
 
@@ -66,9 +65,6 @@ export default function HomePage() {
         const data = await res.json();
         if (mounted) {
           const codingNow = (data?.codingProcesses || []).some(isCodingProcess);
-          if (codingNow && !wasCodingRef.current) {
-            setShowCodingPopup(true);
-          }
           wasCodingRef.current = codingNow;
           setLocalWork(data);
         }
@@ -88,47 +84,21 @@ export default function HomePage() {
   return (
     <>
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scanline {
-          0%   { transform: translateY(-100%); }
-          100% { transform: translateY(100vh); }
-        }
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0; }
-        }
-        .tool-row { transition: background 0.15s ease; }
-        .tool-row:hover { background: rgba(255,255,255,0.04) !important; cursor: pointer; }
-        .tool-row:hover .tool-arrow { transform: translateX(4px); color: #75e8ff !important; }
+        .tool-row { transition: background 0.18s ease, border-color 0.18s ease; }
+        .tool-row:hover { background: rgba(255,255,255,0.03) !important; border-color: rgba(255,255,255,0.12) !important; cursor: pointer; }
+        .tool-row:hover .tool-arrow { transform: translateX(4px); color: #dfe5ee !important; }
         .tool-arrow { transition: transform 0.15s ease, color 0.15s ease; }
       `}</style>
 
       <div style={{
         minHeight: '100vh',
-        background: '#0a0a0f',
-        color: '#f0f0f0',
-        fontFamily: '"Inter", "Apple SD Gothic Neo", sans-serif',
+        background: 'linear-gradient(180deg, #111318 0%, #151922 42%, #181d28 100%)',
+        color: '#eef2f6',
+        fontFamily: '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif',
         opacity: visible ? 1 : 0,
         transform: visible ? 'none' : 'translateY(12px)',
         transition: 'opacity 0.4s ease, transform 0.4s ease',
       }}>
-        {showCodingPopup && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-            <div style={{ width: 'min(520px, 92vw)', borderRadius: 14, border: '1px solid rgba(117,232,255,0.4)', background: 'linear-gradient(180deg,#0d1430,#0a1025)', boxShadow: '0 10px 40px rgba(0,0,0,0.45)', padding: '1rem 1.1rem' }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 12, color: '#75e8ff', marginBottom: 6 }}>LIVE CODING DETECTED</div>
-              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>OpenClaw 코딩 작업 시작됨 🔥</div>
-              <div style={{ fontSize: 13, color: '#9fb4e7', marginBottom: 12 }}>
-                에이전트들이 탕비실에서 사무실로 이동해서 일하는 중이야.
-              </div>
-              <button onClick={() => setShowCodingPopup(false)} style={{ background: 'linear-gradient(90deg,#75e8ff,#8b5cf6)', border: 'none', color: '#fff', borderRadius: 8, padding: '0.5rem 0.85rem', fontWeight: 800, cursor: 'pointer' }}>확인</button>
-            </div>
-          </div>
-        )}
-
-        {/* ── 상단 헤더 ── */}
         <header style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -137,120 +107,107 @@ export default function HomePage() {
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
           <Link href="/" style={{
-            fontFamily: 'monospace',
-            fontWeight: 700,
+            fontWeight: 800,
             fontSize: '1rem',
-            color: '#f0f0f0',
-            letterSpacing: '0.08em',
+            color: '#f1f4f8',
+            letterSpacing: '-0.02em',
             textDecoration: 'none',
           }}>DLC</Link>
           <span style={{
-            fontFamily: 'monospace',
             fontSize: '0.78rem',
-            color: '#888',
-            letterSpacing: '0.06em',
+            color: '#868f9d',
+            letterSpacing: '0.02em',
           }}>Updated 2026.03</span>
         </header>
 
-        {/* ── 히어로 섹션 ── */}
         <section style={{
-          padding: '4rem 2rem 3rem',
+          padding: '4.25rem 2rem 2.75rem',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
           maxWidth: 960,
           margin: '0 auto',
         }}>
-          {/* 메인 타이틀 */}
           <h1 style={{
-            fontSize: 'clamp(3.2rem, 8vw, 7.5rem)',
-            fontWeight: 900,
-            lineHeight: 1.0,
-            letterSpacing: '-0.04em',
-            margin: '0 0 0.15em',
-            color: '#f0f0f0',
+            fontSize: 'clamp(3rem, 8vw, 6.2rem)',
+            fontWeight: 800,
+            lineHeight: 0.98,
+            letterSpacing: '-0.06em',
+            margin: '0 0 1rem',
+            color: '#f3f5f8',
           }}>AI Club</h1>
-          <h1 style={{
-            fontSize: 'clamp(3.2rem, 8vw, 7.5rem)',
-            fontWeight: 900,
-            lineHeight: 1.0,
-            letterSpacing: '-0.04em',
-            margin: '0 0 2rem',
-            color: '#75e8ff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.1em',
+          <div style={{
+            fontSize: 'clamp(1.1rem, 2.8vw, 1.6rem)',
+            lineHeight: 1.45,
+            color: '#b8c0cc',
+            maxWidth: 680,
+            marginBottom: '1.5rem',
           }}>
-            Deep Learning Crew
-            <span style={{
-              display: 'inline-block',
-              width: '0.06em',
-              height: '0.85em',
-              background: '#75e8ff',
-              marginLeft: '0.08em',
-              verticalAlign: 'middle',
-              animation: 'blink 1.1s step-end infinite',
-              borderRadius: 1,
-            }} />
-          </h1>
+            공공업무에 바로 쓰는 실용형 AI 도구를 빠르게 찾고 실행하는 워크스페이스.
+          </div>
 
-          {/* 배지 행 */}
-          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
             {['회장 사진우', '총무 김동주'].map((b) => {
               const isChair = b.includes('회장');
               return (
                 <span key={b} style={{
-                  fontFamily: 'monospace',
-                  fontSize: '0.8rem',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
-                  color: isChair ? '#08101a' : '#0a0f1d',
-                  background: isChair
-                    ? 'linear-gradient(90deg,#75e8ff,#a7f3ff)'
-                    : 'linear-gradient(90deg,#c4b5fd,#ddd6fe)',
-                  border: isChair
-                    ? '1px solid rgba(117,232,255,0.55)'
-                    : '1px solid rgba(196,181,253,0.55)',
-                  padding: '0.34rem 0.8rem',
+                  color: '#d8e0ec',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${isChair ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.08)'}`,
+                  padding: '0.34rem 0.75rem',
                   borderRadius: 999,
-                  letterSpacing: '0.03em',
-                  boxShadow: isChair
-                    ? '0 0 0 1px rgba(117,232,255,0.2), 0 6px 18px rgba(117,232,255,0.35)'
-                    : '0 0 0 1px rgba(196,181,253,0.2), 0 6px 18px rgba(139,92,246,0.28)',
+                  letterSpacing: '-0.01em',
                 }}>{b}</span>
               );
             })}
           </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: '1px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {[
+              { label: '도구 수', value: `${TOOLS.length}개` },
+              { label: '활성 작업', value: `${localWork?.codingProcesses?.length ?? 0}개` },
+              { label: '최근 커밋', value: localWork?.lastCommit ?? '확인 중' },
+            ].map((item) => (
+              <div key={item.label} style={{ padding: '0.9rem 0.1rem' }}>
+                <div style={{ fontSize: '0.74rem', color: '#868f9d', marginBottom: '0.25rem' }}>{item.label}</div>
+                <div style={{ fontSize: '0.98rem', fontWeight: 700, color: '#eef2f6' }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* ── 도구 리스트 ── */}
         <section style={{
           maxWidth: 960,
           margin: '0 auto',
-          padding: '2rem 2rem',
+          padding: '2.1rem 2rem 1.2rem',
         }}>
-          {/* 섹션 레이블 */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '0.5rem',
-            paddingBottom: '0.6rem',
+            marginBottom: '0.9rem',
+            paddingBottom: '0.8rem',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
           }}>
             <span style={{
-              fontFamily: 'monospace',
               fontSize: '0.72rem',
-              color: '#888',
+              color: '#8c95a3',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-            }}>AI Tools</span>
+            }}>Tools</span>
             <span style={{
-              fontFamily: 'monospace',
               fontSize: '0.72rem',
-              color: '#888',
-              letterSpacing: '0.06em',
+              color: '#8c95a3',
+              letterSpacing: '0.02em',
             }}>{TOOLS.length} items</span>
           </div>
 
-          {/* 번호 목록 */}
           <div>
             {TOOLS.map((tool, i) => (
               <div
@@ -264,27 +221,24 @@ export default function HomePage() {
                   gridTemplateColumns: '1fr auto',
                   alignItems: 'center',
                   gap: '1rem',
-                  padding: '0.9rem 0.75rem',
+                  padding: '1rem 0.2rem',
                   borderBottom: '1px solid rgba(255,255,255,0.06)',
                   background: 'transparent',
-                  borderRadius: 4,
+                  borderRadius: 0,
                 }}
               >
-                {/* 이름 + 설명 */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem', flexWrap: 'wrap' }}>
                   <span style={{
-                    fontSize: '0.97rem',
+                    fontSize: '1rem',
                     fontWeight: 600,
-                    color: hoveredTool === i ? '#f0f0f0' : '#c8c8c8',
+                    color: hoveredTool === i ? '#f1f4f8' : '#c7ced8',
                     transition: 'color 0.18s ease',
                   }}>{tool.label}</span>
                 </div>
 
-                {/* 화살표 */}
                 <span className="tool-arrow" style={{
-                  fontFamily: 'monospace',
                   fontSize: '0.85rem',
-                  color: '#333',
+                  color: '#6f7886',
                   display: 'inline-block',
                 }}>→</span>
               </div>
@@ -292,25 +246,22 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── 활동 소개 (2컬럼) ── */}
         <section style={{
           maxWidth: 960,
           margin: '0 auto',
-          padding: '0 2rem 3rem',
+          padding: '1rem 2rem 3.2rem',
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '1px',
           borderTop: '1px solid rgba(255,255,255,0.08)',
         }}>
-          {/* Passive */}
           <div style={{
-            padding: '2rem 1.5rem 2rem 0',
+            padding: '1.8rem 1.5rem 1.8rem 0',
             borderRight: '1px solid rgba(255,255,255,0.08)',
           }}>
             <div style={{
-              fontFamily: 'monospace',
               fontSize: '0.72rem',
-              color: '#888',
+              color: '#8c95a3',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               marginBottom: '1.2rem',
@@ -332,19 +283,17 @@ export default function HomePage() {
                   flexShrink: 0,
                   display: 'inline-block',
                 }} />
-                <span style={{ fontSize: '0.9rem', color: '#aaa', lineHeight: 1.5 }}>{item}</span>
+                <span style={{ fontSize: '0.92rem', color: '#afb7c2', lineHeight: 1.5 }}>{item}</span>
               </div>
             ))}
           </div>
 
-          {/* Active */}
           <div style={{
-            padding: '2rem 0 2rem 1.5rem',
+            padding: '1.8rem 0 1.8rem 1.5rem',
           }}>
             <div style={{
-              fontFamily: 'monospace',
               fontSize: '0.72rem',
-              color: '#75e8ff',
+              color: '#d7dee7',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               marginBottom: '1.2rem',
@@ -362,18 +311,17 @@ export default function HomePage() {
                 <span style={{
                   width: 1,
                   height: '1em',
-                  background: '#75e8ff',
+                  background: '#d7dee7',
                   opacity: 0.4,
                   flexShrink: 0,
                   display: 'inline-block',
                 }} />
-                <span style={{ fontSize: '0.9rem', color: '#aaa', lineHeight: 1.5 }}>{item}</span>
+                <span style={{ fontSize: '0.92rem', color: '#afb7c2', lineHeight: 1.5 }}>{item}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── 푸터 ── */}
         <footer style={{
           borderTop: '1px solid rgba(255,255,255,0.08)',
           padding: '1.2rem 2rem',
@@ -384,16 +332,14 @@ export default function HomePage() {
           alignItems: 'center',
         }}>
           <span style={{
-            fontFamily: 'monospace',
             fontSize: '0.75rem',
-            color: '#444',
-            letterSpacing: '0.06em',
+            color: '#687180',
+            letterSpacing: '0.02em',
           }}>© 2026 Deep Learning Crew</span>
           <span style={{
-            fontFamily: 'monospace',
             fontSize: '0.72rem',
-            color: '#333',
-            letterSpacing: '0.06em',
+            color: '#687180',
+            letterSpacing: '0.02em',
           }}>AI Club</span>
         </footer>
 

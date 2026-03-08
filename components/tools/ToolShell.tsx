@@ -20,11 +20,12 @@ interface ToolShellProps {
 export function ToolShell({
   eyebrow,
   title,
-  badges = [],
   meta = [],
   main,
   side,
 }: ToolShellProps) {
+  const hasSide = meta.length > 0 || Boolean(side);
+
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
@@ -32,15 +33,6 @@ export function ToolShell({
           <div className={styles.heroMain}>
             <div className={styles.eyebrow}>{eyebrow}</div>
             <h1 className={styles.title}>{title}</h1>
-            {badges.length > 0 ? (
-              <div className={styles.badgeRow}>
-                {badges.slice(0, 2).map((badge) => (
-                  <span className={styles.badge} key={badge}>
-                    {badge}
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           {meta.length > 0 ? (
@@ -57,9 +49,9 @@ export function ToolShell({
           ) : null}
         </section>
 
-        <section className={styles.content}>
+        <section className={hasSide ? styles.content : styles.contentSingle}>
           <div className={styles.contentMain}>{main}</div>
-          <div className={styles.contentSide}>{side}</div>
+          {hasSide ? <div className={styles.contentSide}>{side}</div> : null}
         </section>
       </div>
     </div>
