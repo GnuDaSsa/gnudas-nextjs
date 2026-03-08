@@ -2,10 +2,10 @@
   position: relative;
   min-height: 100vh;
   padding: 36px 28px 88px;
-  color: #eef2f8;
+  color: #f0f0f0;
   background:
-    radial-gradient(circle at top left, rgba(92, 111, 145, 0.08), transparent 24%),
-    linear-gradient(180deg, #111318 0%, #151922 44%, #181d28 100%);
+    radial-gradient(circle at top left, rgba(117, 232, 255, 0.09), transparent 20%),
+    linear-gradient(180deg, #0a0a0f 0%, #0d1017 48%, #10141d 100%);
 }
 
 .page::before {
@@ -25,12 +25,10 @@
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
-  gap: 28px;
-  margin-bottom: 36px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: block;
+  margin-bottom: 34px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .heroMain,
@@ -46,6 +44,7 @@
 
 .heroMain {
   padding: 0;
+  max-width: 760px;
 }
 
 .heroSide {
@@ -62,21 +61,22 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8d97a8;
+  color: #9aa0aa;
+  font-family: monospace;
 }
 
 .eyebrow::before {
   content: '';
   width: 18px;
   height: 1px;
-  background: rgba(144, 160, 182, 0.6);
+  background: rgba(117, 232, 255, 0.65);
 }
 
 .title {
   margin: 0;
-  font-size: clamp(2.1rem, 4vw, 3.5rem);
-  line-height: 1.08;
-  letter-spacing: -0.05em;
+  font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
   font-weight: 800;
   color: #f4f6f8;
   word-break: keep-all;
@@ -129,11 +129,11 @@
 
 .stack {
   display: grid;
-  gap: 28px;
+  gap: 34px;
 }
 
 .surface {
-  padding-top: 18px;
+  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -142,7 +142,7 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .sectionTitle {
@@ -150,14 +150,14 @@
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: #eef2f7;
+  color: #f2f3f5;
 }
 
 .sectionDescription {
   margin: 4px 0 0;
-  color: #7f8897;
-  font-size: 12px;
-  line-height: 1.55;
+  color: #8f98a6;
+  font-size: 13px;
+  line-height: 1.6;
   max-width: 60ch;
 }
 
@@ -176,7 +176,7 @@
 .label {
   display: block;
   margin-bottom: 8px;
-  color: #b8c3d5;
+  color: #c8d1dc;
   font-size: 12px;
   font-weight: 700;
 }
@@ -185,11 +185,11 @@
 .textarea,
 .select {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(7, 9, 14, 0.82);
   color: #eff3f9;
-  padding: 13px 14px;
+  padding: 14px 15px;
   outline: none;
   font-size: 15px;
   transition:
@@ -207,8 +207,8 @@
 .input:focus,
 .textarea:focus,
 .select:focus {
-  border-color: rgba(134, 153, 188, 0.55);
-  box-shadow: 0 0 0 4px rgba(109, 124, 151, 0.14);
+  border-color: rgba(117, 232, 255, 0.48);
+  box-shadow: 0 0 0 3px rgba(117, 232, 255, 0.1);
 }
 
 .actions {
@@ -221,9 +221,9 @@
 .buttonPrimary,
 .buttonSecondary,
 .buttonGhost {
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: 12px;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -235,22 +235,21 @@
 }
 
 .buttonPrimary {
-  border: 0;
-  color: #f8fbff;
-  background: #e9edf3;
-  color: #11151d;
+  border: 1px solid rgba(117, 232, 255, 0.32);
+  background: #75e8ff;
+  color: #071018;
   box-shadow: none;
 }
 
 .buttonSecondary {
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #e7edf8;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .buttonGhost {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  color: #a8b1be;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #b0bac7;
   background: transparent;
 }
 
@@ -266,8 +265,8 @@
   gap: 6px;
   padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.035);
-  color: #c1c9d6;
+  background: rgba(117, 232, 255, 0.08);
+  color: #9fefff;
   font-size: 11px;
   font-weight: 700;
 }
@@ -275,22 +274,23 @@
 .resultPanel {
   white-space: pre-wrap;
   line-height: 1.8;
-  color: #e4ebf5;
+  color: #e9eef7;
   font-size: 15px;
 }
 
 .emptyState {
-  color: #7f8da1;
+  color: #8b94a3;
   font-size: 14px;
   line-height: 1.75;
 }
 
 .codeBlock {
   margin: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 18px;
-  background: #111723;
-  color: #d7deea;
+  background: rgba(8, 10, 15, 0.96);
+  color: #d7e4f3;
+  border: 1px solid rgba(117, 232, 255, 0.12);
   overflow-x: auto;
   font-size: 13px;
   line-height: 1.8;
@@ -308,7 +308,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   background: transparent;
   line-height: 1.65;
-  color: #d5dce7;
+  color: #dce3ee;
 }
 
 .progressTrack {
@@ -316,13 +316,13 @@
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .progressFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #7b8798, #d7dde8);
+  background: linear-gradient(90deg, #75e8ff, #d7dde8);
   transition: width 0.28s ease;
 }
 
@@ -348,12 +348,12 @@
 
 .optionButton:hover {
   transform: none;
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(117, 232, 255, 0.28);
 }
 
 .optionButtonSelected {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(117, 232, 255, 0.28);
+  background: rgba(117, 232, 255, 0.05);
   box-shadow: none;
 }
 
@@ -375,7 +375,7 @@
 }
 
 .muted {
-  color: #7f8da1;
+  color: #8f98a6;
 }
 
 @media (max-width: 1024px) {
@@ -417,38 +417,9 @@
     letter-spacing: 0.13em;
   }
 
-  .badgeRow {
-    display: none;
-  }
-
   .hero {
     gap: 18px;
     margin-bottom: 20px;
     padding-bottom: 20px;
-  }
-
-  .heroSide {
-    padding: 0;
-  }
-
-  .metaList {
-    display: grid;
-    gap: 10px;
-    padding-top: 12px;
-  }
-
-  .metaCard {
-    padding: 12px 0;
-    border-radius: 0;
-  }
-
-  .metaLabel {
-    margin-bottom: 4px;
-    font-size: 10px;
-  }
-
-  .metaValue {
-    font-size: 14px;
-    line-height: 1.45;
   }
 }
