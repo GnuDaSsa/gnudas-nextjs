@@ -37,11 +37,11 @@ export const CHAR_INFO: Record<CharId, { name: string; color: string }> = {
   buddy:         { name: '동기',    color: '#d0ffd8' },
 };
 
-const RAW = 'https://raw.githubusercontent.com/GnuDaSsa/AI/feature/novel-lab-initial/novel-lab/renpy/game/images';
-export const BG_URL = (name: string) => `${RAW}/bg/${name}.png`;
-const LOCAL_CHARS = new Set<CharId>(['caller', 'caller_ice', 'caller_spring']);
-export const CHAR_URL = (id: CharId) =>
-  LOCAL_CHARS.has(id) ? `/novel/chars/${id}_default.png` : `${RAW}/chars/${id}_default.png`;
+
+export const BG_URL = (name: string) => `/novel/bg/${name}.png`;
+
+
+export const CHAR_URL = (id: CharId) => `/novel/chars/${id}_default.png`;
 
 // ── 엔딩 분기 헬퍼 ────────────────────────────────────────────────────
 // processToInteractive에서는 변수를 직접 읽을 수 없으므로,
