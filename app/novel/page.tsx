@@ -122,6 +122,22 @@ export default function NovelPage() {
   const currentTrackRef = useRef(0);
   const prevItemsRef = useRef<string[]>([]);
 
+  // Preload all game images while user is on start screen
+  useEffect(() => {
+    const bgNames = new Set<string>();
+    const charIdSet = new Set<string>();
+    Object.values(STORY).forEach(scene => {
+      scene.beats.forEach((b: any) => {
+        if (b.kind === 'bg') bgNames.add(b.name);
+        if (b.kind === 'show') b.chars.forEach((c: any) => charIdSet.add(c.id));
+        if (b.kind === 'photo') { const img = new Image(); img.src = b.src; }
+      });
+    });
+    bgNames.forEach(name => { const img = new Image(); img.src = BG_URL(name); });
+    charIdSet.forEach(id => { const img = new Image(); img.src = CHAR_URL(id as CharId); });
+    const start = new Image(); start.src = '/novel/start_bg.jpg';
+  }, []);
+
   // Init audio elements once
   useEffect(() => {
     const a1 = new Audio('/novel/bgm.mp3');
@@ -404,7 +420,7 @@ export default function NovelPage() {
 
           {/* Key use popup — only for ending_growth with the key */}
           {showKeyPopup && (
-            <div style={{ marginTop: 8, padding: '14px 20px', background: 'rgba(10,20,60,0.92)', border: '1px solid rgba(180,160,80,0.5)', borderRadius: 10, maxWidth: 320, backdropFilter: 'blur(6px)' }}>
+            <div style={{ marginTop: 8, padding: '14px 20px', background: 'rgba(10,20,60,0.92)', border: '1px solid rgba(180,160,80,0.5)', borderRadius: 10, maxWidth: 320 }}>
               <div style={{ fontSize: '0.7rem', color: '#c8a83a', letterSpacing: '0.15em', marginBottom: 6 }}>🗝 아이템</div>
               <div style={{ fontSize: '0.9rem', color: '#f0e8c0', marginBottom: 10 }}>이름 모를 열쇠를 사용하시겠습니까?</div>
               <button
@@ -451,14 +467,14 @@ export default function NovelPage() {
         >
           {/* Background */}
           {state.bg
-            ? <img src={BG_URL(state.bg)} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={BG_URL(state.bg)} alt="" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             : <div style={{ position: 'absolute', inset: 0, background: '#000' }} />
           }
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.18)' }} />
 
           {/* Characters */}
           {state.chars.map(ch => (
-            <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} style={getCharStyle(ch.pos, ch.id)} />
+            <img key={ch.id} src={CHAR_URL(ch.id as CharId)} alt={CHAR_INFO[ch.id as CharId]?.name} decoding="async" style={getCharStyle(ch.pos, ch.id)} />
           ))}
 
           {/* Item acquisition popup */}
@@ -475,7 +491,7 @@ export default function NovelPage() {
           {/* TOP-LEFT: Stats box */}
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6, pointerEvents: 'none' }}>
             <div style={{ position: 'relative' }}>
-              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,120,255,0.35)', borderRadius: 6 }}>
                 <div style={{ fontSize: '0.67rem', color: '#4a5a8a', letterSpacing: '0.1em', marginBottom: 1 }}>멘탈</div>
                 <div style={{ fontSize: '0.94rem', fontWeight: 700, color: m >= 0 ? '#8aacff' : '#ff7a7a', lineHeight: 1 }}>{m >= 0 ? '+' : ''}{m}</div>
               </div>
@@ -486,7 +502,7 @@ export default function NovelPage() {
               )}
             </div>
             <div style={{ position: 'relative' }}>
-              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+              <div style={{ padding: '5px 10px', background: 'rgba(4,8,28,0.82)', border: '1px solid rgba(80,200,160,0.3)', borderRadius: 6 }}>
                 <div style={{ fontSize: '0.67rem', color: '#3a6a5a', letterSpacing: '0.1em', marginBottom: 1 }}>팀유대</div>
                 <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#6adfc8', lineHeight: 1 }}>{t >= 0 ? '+' : ''}{t}</div>
               </div>
@@ -501,7 +517,7 @@ export default function NovelPage() {
           {/* TOP-RIGHT: BGM button */}
           <button
             onClick={e => { e.stopPropagation(); toggleBgm(); }}
-            style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', background: bgmOn ? 'rgba(30,55,140,0.75)' : 'rgba(20,20,30,0.75)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, borderRadius: 6, color: bgmOn ? '#8aacff' : '#555', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, backdropFilter: 'blur(4px)', lineHeight: 1.4 }}
+            style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', background: bgmOn ? 'rgba(30,55,140,0.75)' : 'rgba(20,20,30,0.75)', border: `1px solid ${bgmOn ? 'rgba(106,143,255,0.5)' : 'rgba(80,80,100,0.4)'}`, borderRadius: 6, color: bgmOn ? '#8aacff' : '#555', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, lineHeight: 1.4 }}
           >
             {bgmOn ? '♪ ON' : '♪ OFF'}
           </button>
