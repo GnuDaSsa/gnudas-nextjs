@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 import styles from './page.module.css';
 
 type FactChatModel = {
@@ -13,55 +13,15 @@ type ChatMessage = {
   content: string;
 };
 
-type Template = {
-  id: string;
-  label: string;
-  description: string;
-  prompt: string;
-  tone: string;
-};
-
 const MODEL_STORAGE = 'seongnam-ai-client-model';
 const DEFAULT_BASE_URL = 'https://factchat-cloud.mindlogic.ai/v1/gateway';
-
-const templates: Template[] = [
-  {
-    id: 'general',
-    label: '일반 질의',
-    description: '빠른 답변과 핵심 정리',
-    tone: 'neutral',
-    prompt: '핵심부터 간결하게 답변하고, 필요한 경우 항목으로 정리하세요.',
-  },
-  {
-    id: 'civil',
-    label: '민원답변',
-    description: '문자 회신 초안',
-    tone: 'green',
-    prompt:
-      "성남시 담당 부서의 민원 문자 답변 초안으로 작성하세요. '안녕하십니까?'로 시작하고 문의 내용을 이해한 문장을 포함하며, 마지막에는 추가 문의 안내와 감사 인사를 포함하세요.",
-  },
-  {
-    id: 'document',
-    label: '공문 문장',
-    description: '행정 문체 다듬기',
-    tone: 'blue',
-    prompt:
-      '입력한 문장을 공문서에 맞는 명확하고 정중한 행정 문체로 다듬으세요. 의미는 바꾸지 말고 표현을 정리하세요.',
-  },
-  {
-    id: 'table',
-    label: '엑셀 분석',
-    description: '표 내용 요약',
-    tone: 'amber',
-    prompt:
-      '붙여넣은 표나 엑셀 내용을 읽고 주요 사실, 이상치, 처리해야 할 항목, 추천 답변을 구분해서 정리하세요.',
-  },
-];
+const DEFAULT_SYSTEM_PROMPT =
+  'You are a helpful AI assistant for public-sector office work. Answer in Korean unless the user asks for another language. Be concise, accurate, and practical.';
 
 async function readResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message = data?.error?.message || data?.message || `요청 실패 (${response.status})`;
+    const message = data?.error?.message || data?.message || `Request failed (${response.status})`;
     throw new Error(message);
   }
   return data;
@@ -71,51 +31,23 @@ export default function SeongnamAiPage() {
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
   const [models, setModels] = useState<FactChatModel[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
-  const [activeTemplate, setActiveTemplate] = useState(templates[0]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content:
-        '성남시 AI 플랫폼에 자동 연결합니다. 모델 목록이 뜨면 바로 대화를 시작할 수 있습니다.',
+      content: 'Connected to the Seongnam AI platform. Choose a model and start chatting.',
     },
   ]);
   const [input, setInput] = useState('');
-  const [credits, setCredits] = useState<Record<string, unknown> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [notice, setNotice] = useState('');
-
-  const canUseApi = baseUrl.trim().length > 0;
-
-  const creditSummary = useMemo(() => {
-    if (!credits) return null;
-
-    return Object.entries(credits)
-      .filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value))
-      .slice(0, 4);
-  }, [credits]);
-
-  const loadCredits = useCallback(async (nextBaseUrl = baseUrl.trim()) => {
-    if (!nextBaseUrl) return;
-
-    try {
-      const data = await readResponse(
-        await fetch('/api/factchat/credits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ baseUrl: nextBaseUrl }),
-        }),
-      );
-      setCredits(data);
-    } catch {
-      setCredits(null);
-    }
-  }, [baseUrl]);
+  const didAutoConnect = useRef(false);
 
   const connectAccount = useCallback(async () => {
-    if (!canUseApi) {
-      setNotice('Base URL을 입력하세요.');
+    const nextBaseUrl = baseUrl.trim();
+    if (!nextBaseUrl) {
+      setNotice('Base URL is required.');
       return;
     }
 
@@ -127,35 +59,33 @@ export default function SeongnamAiPage() {
         await fetch('/api/factchat/models', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ baseUrl: baseUrl.trim() }),
+          body: JSON.stringify({ baseUrl: nextBaseUrl }),
         }),
       );
 
       const nextModels = (modelData.data ?? []) as FactChatModel[];
       setModels(nextModels);
 
-      const storedModel = selectedModel || window.localStorage.getItem(MODEL_STORAGE) || '';
+      const storedModel = window.localStorage.getItem(MODEL_STORAGE) || '';
       const modelExists = nextModels.some((model) => model.id === storedModel);
       const nextModel = modelExists ? storedModel : nextModels[0]?.id ?? '';
-      setSelectedModel(nextModel);
 
+      setSelectedModel(nextModel);
       if (nextModel) window.localStorage.setItem(MODEL_STORAGE, nextModel);
 
       setIsConnected(true);
-      setNotice(`연결 완료: ${nextModels.length}개 모델을 사용할 수 있습니다.`);
-
-      void loadCredits(baseUrl.trim());
+      setNotice('');
     } catch (error) {
       setIsConnected(false);
-      setNotice(error instanceof Error ? error.message : '연결에 실패했습니다.');
+      setNotice(error instanceof Error ? error.message : 'Connection failed.');
     } finally {
       setIsLoadingModels(false);
     }
-  }, [baseUrl, canUseApi, loadCredits, selectedModel]);
+  }, [baseUrl]);
 
   useEffect(() => {
-    const savedModel = window.localStorage.getItem(MODEL_STORAGE) ?? '';
-    setSelectedModel(savedModel);
+    if (didAutoConnect.current) return;
+    didAutoConnect.current = true;
     void connectAccount();
   }, [connectAccount]);
 
@@ -164,13 +94,13 @@ export default function SeongnamAiPage() {
     window.localStorage.setItem(MODEL_STORAGE, modelId);
   }
 
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
 
     const text = input.trim();
-    if (!text) return;
-    if (!canUseApi || !selectedModel) {
-      setNotice('API 연결과 모델 선택이 필요합니다.');
+    if (!text || isSending) return;
+    if (!selectedModel) {
+      setNotice('Select a model before sending.');
       return;
     }
 
@@ -189,7 +119,7 @@ export default function SeongnamAiPage() {
           body: JSON.stringify({
             baseUrl: baseUrl.trim(),
             model: selectedModel,
-            systemPrompt: activeTemplate.prompt,
+            systemPrompt: DEFAULT_SYSTEM_PROMPT,
             messages: nextMessages.map((message) => ({
               role: message.role,
               content: message.content,
@@ -201,7 +131,7 @@ export default function SeongnamAiPage() {
       const answer =
         data?.choices?.[0]?.message?.content ??
         data?.output_text ??
-        '응답 형식을 해석하지 못했습니다.';
+        'The response format could not be parsed.';
 
       setMessages((current) => [...current, { role: 'assistant', content: answer }]);
     } catch (error) {
@@ -211,13 +141,19 @@ export default function SeongnamAiPage() {
           role: 'assistant',
           content:
             error instanceof Error
-              ? `요청 중 오류가 발생했습니다: ${error.message}`
-              : '요청 중 오류가 발생했습니다.',
+              ? `Request failed: ${error.message}`
+              : 'Request failed. Please try again.',
         },
       ]);
     } finally {
       setIsSending(false);
     }
+  }
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+    event.preventDefault();
+    void sendMessage();
   }
 
   return (
@@ -226,77 +162,50 @@ export default function SeongnamAiPage() {
         <div className={styles.heroMain}>
           <div className={styles.heroContent}>
             <p className={styles.eyebrow}>Seongnam AI Gateway</p>
-            <h1>성남시 AI 플랫폼으로 연결된 모바일 업무비서</h1>
+            <h1>AI workspace connected to the Seongnam platform</h1>
             <p className={styles.heroCopy}>
-              서버에 등록된 성남시 AI API 키로 여러 AI 모델을 호출하는 내부용 AI
-              클라이언트입니다. 사용자는 별도 키 입력 없이 모델을 선택하고 바로 업무에
-              활용할 수 있습니다.
+              A clean chat client powered by the server-side FactChat API key. No key input, no
+              setup flow. Pick a model and work.
             </p>
-            <div className={styles.heroActions}>
-              <button className={styles.ghostButton} type="button" onClick={() => loadCredits()}>
-                크레딧 조회
-              </button>
-            </div>
           </div>
         </div>
 
         <aside className={styles.heroSide}>
           <div className={styles.metric}>
-            <span>Connection</span>
-            <strong>{isConnected ? 'Online' : 'Ready'}</strong>
+            <span>Status</span>
+            <strong>{isLoadingModels ? 'Connecting' : isConnected ? 'Online' : 'Ready'}</strong>
           </div>
           <div className={styles.metric}>
             <span>Models</span>
-            <strong>{models.length || 'API 연결 후'}</strong>
+            <strong>{models.length || '-'}</strong>
           </div>
           <div className={styles.metric}>
-            <span>Mode</span>
-            <strong>{activeTemplate.label}</strong>
+            <span>Current</span>
+            <strong>{selectedModel || 'None'}</strong>
           </div>
         </aside>
       </section>
 
       {notice && <div className={styles.notice}>{notice}</div>}
 
-      <section className={styles.grid}>
+      <section className={styles.chatLayout}>
         <article className={styles.card}>
           <div className={styles.sectionHead}>
             <div>
-              <span>01 Gateway</span>
-              <h2>자동 연결 상태</h2>
+              <span>Models</span>
+              <h2>Model picker</h2>
             </div>
-            <small>{isLoadingModels ? '연결 중' : isConnected ? '연결됨' : '대기'}</small>
+            <small>{models.length ? `${models.length} available` : 'loading'}</small>
           </div>
 
           <label className={styles.field}>
-            <span>Base URL</span>
-            <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
-          </label>
-
-          <div className={styles.buttonRow}>
-            <button className={styles.primaryButton} type="button" onClick={connectAccount}>
-              다시 연결
-            </button>
-          </div>
-        </article>
-
-        <article className={styles.card}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span>02 Model</span>
-              <h2>모델 선택</h2>
-            </div>
-            <small>{models.length ? `${models.length}개 모델` : '대기 중'}</small>
-          </div>
-
-          <label className={styles.field}>
-            <span>현재 모델</span>
+            <span>Selected model</span>
             <select
               value={selectedModel}
               onChange={(event) => selectModel(event.target.value)}
               disabled={!models.length}
             >
-              {!models.length && <option value="">API 연결 후 선택</option>}
+              {!models.length && <option value="">Loading models</option>}
               {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.id}
@@ -306,7 +215,7 @@ export default function SeongnamAiPage() {
           </label>
 
           <div className={styles.modelPills}>
-            {models.slice(0, 8).map((model) => (
+            {models.slice(0, 12).map((model) => (
               <button
                 key={model.id}
                 type="button"
@@ -317,72 +226,27 @@ export default function SeongnamAiPage() {
               </button>
             ))}
           </div>
-        </article>
 
-        <article className={styles.card}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span>03 Credits</span>
-              <h2>크레딧 상태</h2>
-            </div>
-            <small>실시간 조회</small>
-          </div>
-
-          {creditSummary?.length ? (
-            <div className={styles.creditGrid}>
-              {creditSummary.map(([key, value]) => (
-                <div key={key}>
-                  <span>{key}</span>
-                  <strong>{String(value)}</strong>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className={styles.mutedCopy}>API 연결 후 크레딧 잔액을 조회합니다.</p>
-          )}
-        </article>
-      </section>
-
-      <section className={styles.chatLayout}>
-        <article className={styles.card}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span>04 Template</span>
-              <h2>업무 템플릿</h2>
-            </div>
-          </div>
-
-          <div className={styles.templateList}>
-            {templates.map((template) => (
-              <button
-                key={template.id}
-                type="button"
-                className={`${styles.templateButton} ${styles[template.tone]} ${
-                  activeTemplate.id === template.id ? styles.active : ''
-                }`}
-                onClick={() => setActiveTemplate(template)}
-              >
-                <strong>{template.label}</strong>
-                <span>{template.description}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.promptPreview}>
-            <span>시스템 지시</span>
-            <p>{activeTemplate.prompt}</p>
+          <div className={styles.connectionTools}>
+            <label className={styles.field}>
+              <span>Gateway URL</span>
+              <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
+            </label>
+            <button className={styles.ghostButton} type="button" onClick={connectAccount}>
+              Refresh models
+            </button>
           </div>
         </article>
 
         <article className={styles.chatCard}>
           <div className={styles.chatHeader}>
             <div>
-              <span>Selected</span>
-              <strong>{selectedModel || '모델 미선택'}</strong>
+              <span>Chat</span>
+              <strong>{selectedModel || 'Model loading'}</strong>
             </div>
             <div className={styles.chatMeta}>
-              <span>{activeTemplate.label}</span>
               <span>{messages.length} messages</span>
+              <span>Enter to send</span>
             </div>
           </div>
 
@@ -392,14 +256,18 @@ export default function SeongnamAiPage() {
                 key={`${message.role}-${index}`}
                 className={`${styles.message} ${styles[message.role]}`}
               >
-                <span>{message.role === 'assistant' ? 'AI' : '나'}</span>
+                <span>{message.role === 'assistant' ? 'AI' : 'You'}</span>
                 <p>{message.content}</p>
               </div>
             ))}
+
             {isSending && (
               <div className={`${styles.message} ${styles.assistant}`}>
                 <span>AI</span>
-                <p>응답을 생성하고 있습니다.</p>
+                <div className={styles.loadingBubble}>
+                  <i />
+                  <p>Generating response</p>
+                </div>
               </div>
             )}
           </div>
@@ -407,8 +275,9 @@ export default function SeongnamAiPage() {
           <form className={styles.composer} onSubmit={sendMessage}>
             <textarea
               value={input}
-              placeholder="질문, 민원 내용, 공문 문장, 엑셀 표 내용을 붙여넣으세요."
+              placeholder="Ask anything. Enter sends, Shift+Enter adds a new line."
               onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleComposerKeyDown}
               rows={4}
             />
             <div className={styles.composerActions}>
@@ -417,10 +286,10 @@ export default function SeongnamAiPage() {
                 type="button"
                 onClick={() => setMessages(messages.slice(0, 1))}
               >
-                대화 초기화
+                Reset chat
               </button>
               <button className={styles.primaryButton} type="submit" disabled={isSending}>
-                {isSending ? '전송 중' : '보내기'}
+                Send
               </button>
             </div>
           </form>
