@@ -35,7 +35,7 @@ export default function SeongnamAiPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Ready.',
+      content: '성남AI 게이트웨이에 연결할게요. 모델을 불러온 뒤 바로 질문할 수 있습니다.',
     },
   ]);
   const [input, setInput] = useState('');
@@ -161,55 +161,64 @@ export default function SeongnamAiPage() {
     void sendMessage();
   }
 
+  const statusLabel = notice ? 'Setup needed' : isLoadingModels ? 'Connecting' : isConnected ? 'Online' : 'Ready';
+  const modelLabel = selectedModel || 'No model selected';
+
   return (
     <div className={styles.shell}>
       <section className={styles.hero}>
-        <div className={styles.heroMain}>
-          <div className={styles.heroContent}>
-            <p className={styles.eyebrow}>SN Gateway</p>
-            <h1>
-              <span>SN</span>
-              <span>Service</span>
-            </h1>
-          </div>
+        <div className={styles.heroCopy}>
+          <h1>Seongnam<br />AI Platform</h1>
         </div>
 
-        <aside className={styles.heroSide}>
-          <div className={styles.metric}>
-            <span>Status</span>
-            <strong>{isLoadingModels ? 'Connecting' : isConnected ? 'Online' : 'Ready'}</strong>
+        <aside className={styles.statusPanel} aria-label="성남AI 연결 상태">
+          <div className={styles.statusTopline}>
+            <span className={`${styles.statusDot} ${isConnected ? styles.online : ''}`} />
+            <span>{statusLabel}</span>
           </div>
-          <div className={styles.metric}>
-            <span>Models</span>
-            <strong>{models.length || '-'}</strong>
+          <div>
+            <div className={styles.statusModel}>{modelLabel}</div>
+            <p className={styles.statusHint}>
+              {selectedModel
+                ? '선택한 모델로 보고자료, 민원 문장, 내부 검토 초안을 바로 정리합니다.'
+                : 'FactChat 모델을 불러오면 이 영역에서 현재 라우팅 상태를 확인할 수 있습니다.'}
+            </p>
           </div>
-          <div className={styles.metric}>
-            <span>Current</span>
-            <strong>{selectedModel || 'None'}</strong>
+          <div className={styles.statusGrid}>
+            <div>
+              <span>Models</span>
+              <strong>{models.length || '-'}</strong>
+            </div>
+            <div>
+              <span>Endpoint</span>
+              <strong>FactChat</strong>
+            </div>
           </div>
         </aside>
       </section>
 
       {notice && <div className={styles.notice}>{notice}</div>}
 
-      <section className={styles.chatLayout}>
-        <article className={styles.card}>
-          <div className={styles.sectionHead}>
+      <section className={styles.workspace}>
+        <aside className={styles.controlPanel}>
+          <div className={styles.panelHeader}>
             <div>
-              <span>Models</span>
-              <h2>Model</h2>
+              <span>Model routing</span>
+              <h2>응답 모델</h2>
             </div>
             <small>{models.length || '-'}</small>
           </div>
 
           <label className={styles.field}>
-            <span>Selected</span>
+            <span>Selected model</span>
             <select
               value={selectedModel}
               onChange={(event) => selectModel(event.target.value)}
               disabled={!models.length}
             >
-              {!models.length && <option value="">Loading</option>}
+              {!models.length && (
+                <option value="">{isLoadingModels ? 'Loading models' : 'No models available'}</option>
+              )}
               {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.id}
@@ -217,19 +226,41 @@ export default function SeongnamAiPage() {
               ))}
             </select>
           </label>
-          <button className={styles.ghostButton} type="button" onClick={connectAccount}>
-            Refresh
-          </button>
-        </article>
+
+          <div className={styles.modelList}>
+            {models.slice(0, 5).map((model) => (
+              <button
+                key={model.id}
+                type="button"
+                className={model.id === selectedModel ? styles.modelPillActive : styles.modelPill}
+                onClick={() => selectModel(model.id)}
+              >
+                {model.id}
+              </button>
+            ))}
+            {!models.length && (
+              <p>
+                {isLoadingModels
+                  ? 'FactChat에서 모델 목록을 불러오는 중입니다.'
+                  : '모델을 불러오지 못했습니다. API 키와 연결 상태를 확인하세요.'}
+              </p>
+            )}
+          </div>
+
+          <div className={styles.helperCard}>
+            <span>System</span>
+            <p>한국어 우선, 공공기관 실무 답변, 간결하고 검증 가능한 초안 중심.</p>
+          </div>
+        </aside>
 
         <article className={styles.chatCard}>
           <div className={styles.chatHeader}>
             <div>
-              <span>Chat</span>
-              <strong>{selectedModel || 'Loading'}</strong>
+              <span>Conversation</span>
+              <strong>{selectedModel || '모델 연결 대기'}</strong>
             </div>
             <div className={styles.chatMeta}>
-              <span>{messages.length}</span>
+              <span>{messages.length} messages</span>
             </div>
           </div>
 
@@ -257,23 +288,27 @@ export default function SeongnamAiPage() {
 
           <form className={styles.composer} onSubmit={sendMessage}>
             <textarea
+              id="seongnam-composer"
               value={input}
-              placeholder="Message"
+              placeholder="예: 시민 안내문을 더 친절하게 다듬어줘 / 회의 결과를 보도자료 초안으로 정리해줘"
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               rows={4}
             />
             <div className={styles.composerActions}>
-              <button
-                className={styles.ghostButton}
-                type="button"
-                onClick={() => setMessages(messages.slice(0, 1))}
-              >
-                Reset
-              </button>
-              <button className={styles.primaryButton} type="submit" disabled={isSending}>
-                Send
-              </button>
+              <span>Enter 전송 · Shift+Enter 줄바꿈</span>
+              <div>
+                <button
+                  className={styles.ghostButton}
+                  type="button"
+                  onClick={() => setMessages(messages.slice(0, 1))}
+                >
+                  Reset
+                </button>
+                <button className={styles.primaryButton} type="submit" disabled={isSending || !selectedModel}>
+                  Send
+                </button>
+              </div>
             </div>
           </form>
         </article>

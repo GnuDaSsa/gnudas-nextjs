@@ -157,7 +157,7 @@ export default function Sidebar() {
                     padding: '0.5rem 1.4rem',
                     textDecoration: 'none',
                     background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    borderLeft: active ? '2px solid #75e8ff' : '2px solid transparent',
+                    borderLeft: active ? '2px solid #cc785c' : '2px solid transparent',
                   }}
                 >
                   <span
