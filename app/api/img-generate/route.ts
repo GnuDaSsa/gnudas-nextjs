@@ -7,8 +7,13 @@ type ImageItem = {
   url?: string;
   b64_json?: string;
   base64?: string;
+  bytesBase64Encoded?: string;
+  imageBase64?: string;
   image_url?: string;
   imageUrl?: string;
+  asset_url?: string;
+  content?: string;
+  revised_prompt?: string;
 };
 
 type ImageGenerateResponse = {
@@ -40,13 +45,21 @@ function extractImageUrl(data: ImageGenerateResponse): string | null {
     firstData?.url,
     firstData?.b64_json,
     firstData?.base64,
+    firstData?.bytesBase64Encoded,
+    firstData?.imageBase64,
     firstData?.image_url,
     firstData?.imageUrl,
+    firstData?.asset_url,
+    firstData?.content,
     firstImage?.url,
     firstImage?.b64_json,
     firstImage?.base64,
+    firstImage?.bytesBase64Encoded,
+    firstImage?.imageBase64,
     firstImage?.image_url,
     firstImage?.imageUrl,
+    firstImage?.asset_url,
+    firstImage?.content,
     data.url,
     data.image,
     data.image_url,
@@ -70,8 +83,12 @@ function extractImageUrl(data: ImageGenerateResponse): string | null {
           outputItem.url ||
           outputItem.b64_json ||
           outputItem.base64 ||
+          outputItem.bytesBase64Encoded ||
+          outputItem.imageBase64 ||
           outputItem.image_url ||
-          outputItem.imageUrl;
+          outputItem.imageUrl ||
+          outputItem.asset_url ||
+          outputItem.content;
         if (extracted) return asDataUrl(extracted);
       }
     }
@@ -81,7 +98,10 @@ function extractImageUrl(data: ImageGenerateResponse): string | null {
 }
 
 function summarizeShape(data: ImageGenerateResponse) {
-  return Object.keys(data).sort().join(', ') || 'empty object';
+  const topLevel = Object.keys(data).sort().join(', ') || 'empty object';
+  const firstData = data.data?.[0];
+  const firstDataKeys = firstData ? Object.keys(firstData).sort().join(', ') : '';
+  return firstDataKeys ? `${topLevel}; data[0]: ${firstDataKeys}` : topLevel;
 }
 
 export async function POST(req: NextRequest) {
