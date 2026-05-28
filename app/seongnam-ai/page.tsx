@@ -105,7 +105,7 @@ export default function SeongnamAiPage() {
     setSelectedModel(savedModel);
   }, []);
 
-  const canUseApi = apiKey.trim().length > 0 && baseUrl.trim().length > 0;
+  const canUseApi = baseUrl.trim().length > 0;
 
   const creditSummary = useMemo(() => {
     if (!credits) return null;
@@ -117,7 +117,7 @@ export default function SeongnamAiPage() {
 
   async function connectAccount() {
     if (!canUseApi) {
-      setNotice('API 키와 Base URL을 입력하세요.');
+      setNotice('Base URL을 입력하세요.');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function SeongnamAiPage() {
       const nextModel = modelExists ? storedModel : nextModels[0]?.id ?? '';
       setSelectedModel(nextModel);
 
-      window.localStorage.setItem(KEY_STORAGE, apiKey.trim());
+      if (apiKey.trim()) window.localStorage.setItem(KEY_STORAGE, apiKey.trim());
       window.localStorage.setItem(BASE_URL_STORAGE, baseUrl.trim());
       if (nextModel) window.localStorage.setItem(MODEL_STORAGE, nextModel);
 
@@ -158,7 +158,7 @@ export default function SeongnamAiPage() {
   }
 
   async function loadCredits(nextKey = apiKey.trim(), nextBaseUrl = baseUrl.trim()) {
-    if (!nextKey || !nextBaseUrl) return;
+    if (!nextBaseUrl) return;
 
     try {
       const data = await readResponse(
@@ -194,7 +194,7 @@ export default function SeongnamAiPage() {
     const text = input.trim();
     if (!text) return;
     if (!canUseApi || !selectedModel) {
-      setNotice('API 키 연결과 모델 선택이 필요합니다.');
+      setNotice('API 연결과 모델 선택이 필요합니다.');
       return;
     }
 
@@ -293,7 +293,7 @@ export default function SeongnamAiPage() {
               <span>01 Vault</span>
               <h2>개인 API 키 등록</h2>
             </div>
-            <small>{apiKey ? maskKey(apiKey) : '키 미등록'}</small>
+            <small>{apiKey ? maskKey(apiKey) : '서버 기본 키'}</small>
           </div>
 
           <label className={styles.field}>
@@ -301,7 +301,7 @@ export default function SeongnamAiPage() {
             <input
               type="password"
               value={apiKey}
-              placeholder="본인에게 발급된 성남 AI API 키"
+              placeholder="비워두면 서버 FACTCHAT_API_KEY 사용"
               onChange={(event) => setApiKey(event.target.value)}
             />
           </label>

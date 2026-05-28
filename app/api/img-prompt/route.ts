@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { factChatJson, factChatText } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  if (!process.env.GOOGLE_API_KEY) {
-    return NextResponse.json({ error: 'GOOGLE_API_KEY가 설정되지 않았습니다.' }, { status: 500 });
-  }
-
-  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
   const { prompt, style, aspectRatio } = await req.json();
 
   const systemPrompt = `You are an expert image prompt engineer.
@@ -20,17 +15,26 @@ Return JSON with one field:
 Be specific about lighting, composition, mood, and visual details. Return ONLY valid JSON.`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser description: ${prompt}` }] }],
-      config: { responseMimeType: 'application/json' },
-    });
-
-    const text = response.text || '';
-    const parsed = JSON.parse(text);
-
-    return NextResponse.json({ prompt: parsed.prompt || text });
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+    try {
+      const parsed = await factChatJson<{ prompt?: string }>({
+        maxTokens: 1000,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `User description: ${prompt}` },
+        ],
+      });
+      return NextResponse.json({ prompt: parsed.prompt || '' });
+    } catch {
+      const text = await factChatText({
+        maxTokens: 1000,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `User description: ${prompt}` },
+        ],
+      });
+      return NextResponse.json({ prompt: text });
+    }
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

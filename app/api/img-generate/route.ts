@@ -1,38 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { factChatFetch, getFactChatConfig } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
 
+type ImageGenerateResponse = {
+  data?: Array<{ url?: string }>;
+  operation_id?: string;
+  status?: string;
+};
+
 export async function POST(req: NextRequest) {
-  const { prompt, aspectRatio, apiKey, adminPassword } = await req.json();
-
-  let resolvedKey: string;
-  if (adminPassword && process.env.ADMIN_PASSWORD && adminPassword === process.env.ADMIN_PASSWORD) {
-    resolvedKey = process.env.GOOGLE_API_KEY || '';
-  } else if (apiKey) {
-    resolvedKey = apiKey;
-  } else {
-    return NextResponse.json({ error: 'API 키 또는 관리자 비밀번호가 필요합니다.' }, { status: 401 });
-  }
-
-  if (!resolvedKey) {
-    return NextResponse.json({ error: '유효한 이미지 생성 키를 찾지 못했습니다.' }, { status: 500 });
-  }
-
-  const ai = new GoogleGenAI({ apiKey: resolvedKey });
+  const { prompt, aspectRatio } = await req.json();
 
   try {
-    const imageRes = await ai.models.generateImages({
-      model: 'imagen-4.0-generate-001',
-      prompt,
-      config: { numberOfImages: 1, aspectRatio },
-    });
-    const raw = imageRes?.generatedImages?.[0]?.image;
-    if (raw?.mimeType && raw?.imageBytes) {
-      return NextResponse.json({ imageDataUrl: `data:${raw.mimeType};base64,${raw.imageBytes}` });
+    const config = getFactChatConfig();
+    const data = (await factChatFetch('/images/generate/', {
+      method: 'POST',
+      body: JSON.stringify({
+        model: config.imageModel,
+        prompt,
+        aspect_ratio: aspectRatio || '1:1',
+        number_of_images: 1,
+      }),
+    })) as ImageGenerateResponse;
+
+    const imageDataUrl = data.data?.[0]?.url || null;
+    if (imageDataUrl) {
+      return NextResponse.json({ imageDataUrl });
     }
+
+    if (data.operation_id) {
+      return NextResponse.json(
+        {
+          imageDataUrl: null,
+          error: `이미지 생성이 비동기 처리 중입니다. operation_id=${data.operation_id}, status=${data.status || 'processing'}`,
+        },
+        { status: 202 },
+      );
+    }
+
     return NextResponse.json({ imageDataUrl: null });
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

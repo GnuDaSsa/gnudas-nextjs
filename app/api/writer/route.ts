@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { factChatText } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,32 +50,27 @@ const SYSTEM_PROMPTS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   const { messages, mode, context } = await req.json();
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
   const systemBase = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.novel;
   const contextBlock = context?.trim()
     ? `\n\n[작품 컨텍스트]\n${context}`
     : '';
   const system = systemBase + contextBlock;
 
-  const stream = await client.messages.stream({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    system,
-    messages,
+  const text = await factChatText({
+    maxTokens: 4096,
+    messages: [
+      { role: 'system', content: system },
+      ...messages.map((message: { role: 'user' | 'assistant'; content: string }) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    ],
   });
 
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
-    async start(controller) {
-      for await (const event of stream) {
-        if (
-          event.type === 'content_block_delta' &&
-          event.delta.type === 'text_delta'
-        ) {
-          controller.enqueue(encoder.encode(event.delta.text));
-        }
-      }
+    start(controller) {
+      controller.enqueue(encoder.encode(text));
       controller.close();
     },
   });

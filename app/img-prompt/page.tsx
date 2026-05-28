@@ -36,9 +36,6 @@ export default function ImgPromptPage() {
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
   const [loadingImage, setLoadingImage] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
   const [imageError, setImageError] = useState('');
 
   function copyText(text: string) {
@@ -71,8 +68,6 @@ export default function ImgPromptPage() {
 
   async function generateImage() {
     if (!generatedPrompt) return;
-    if (!isAdmin && !apiKey.trim()) return;
-    if (isAdmin && !adminPassword.trim()) return;
 
     setLoadingImage(true);
     setImageDataUrl(null);
@@ -80,8 +75,6 @@ export default function ImgPromptPage() {
 
     try {
       const body: Record<string, string> = { prompt: generatedPrompt, aspectRatio: ratio };
-      if (isAdmin) body.adminPassword = adminPassword;
-      else body.apiKey = apiKey;
 
       const res = await fetch('/api/img-generate', {
         method: 'POST',
@@ -203,52 +196,14 @@ export default function ImgPromptPage() {
               <div>
                 <h2 className={styles.sectionTitle}>생성 권한</h2>
                 <p className={styles.sectionDescription}>
-                  이미지 생성은 사용자 API 키 또는 관리자 비밀번호 중 하나가 필요합니다.
+                  이미지 생성은 서버에 설정된 성남 AI API 키를 자동으로 사용합니다.
                 </p>
               </div>
             </div>
 
-            <div className={styles.actions} style={{ marginTop: 0 }}>
-              <button
-                className={isAdmin ? styles.buttonSecondary : styles.buttonPrimary}
-                onClick={() => {
-                  setIsAdmin(false);
-                  setApiKey('');
-                  setAdminPassword('');
-                }}
-              >
-                일반 사용자
-              </button>
-              <button
-                className={isAdmin ? styles.buttonPrimary : styles.buttonSecondary}
-                onClick={() => {
-                  setIsAdmin(true);
-                  setApiKey('');
-                  setAdminPassword('');
-                }}
-              >
-                관리자
-              </button>
-            </div>
-
-            <label className={styles.label} style={{ marginTop: 14 }}>
-              {isAdmin ? '관리자 비밀번호' : 'Google AI API 키'}
-            </label>
-            <input
-              className={styles.input}
-              type="password"
-              placeholder={isAdmin ? '관리자 비밀번호 입력' : 'AIza...로 시작하는 API 키'}
-              value={isAdmin ? adminPassword : apiKey}
-              onChange={(e) =>
-                isAdmin ? setAdminPassword(e.target.value) : setApiKey(e.target.value)
-              }
-            />
-
-            {!isAdmin ? (
-              <p className={styles.emptyState} style={{ marginTop: 10 }}>
-                입력한 키는 저장되지 않습니다. 프롬프트 생성은 서버 키, 이미지 생성은 입력한 키 또는 관리자 키로 실행됩니다.
-              </p>
-            ) : null}
+            <p className={styles.emptyState} style={{ marginTop: 10 }}>
+              별도 Google API 키를 입력하지 않습니다. 서버의 FACTCHAT_API_KEY와 FACTCHAT_IMAGE_MODEL 설정으로 실행됩니다.
+            </p>
           </section>
 
           {imageDataUrl ? (
@@ -259,6 +214,7 @@ export default function ImgPromptPage() {
                   <p className={styles.sectionDescription}>프롬프트와 비율이 실제로 어떻게 반영됐는지 확인합니다.</p>
                 </div>
               </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageDataUrl}
                 alt="생성된 이미지"

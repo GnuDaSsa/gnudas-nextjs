@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getFactChatConfig } from '@/lib/factchat';
 
 export type FactChatConfig = {
   apiKey: string;
@@ -7,8 +8,9 @@ export type FactChatConfig = {
 
 export function parseConfig(body: unknown): FactChatConfig {
   const input = body as Partial<FactChatConfig> | null;
-  const apiKey = input?.apiKey?.trim();
-  const baseUrl = input?.baseUrl?.trim().replace(/\/+$/, '');
+  const fallback = getFactChatConfig();
+  const apiKey = input?.apiKey?.trim() || fallback.apiKey;
+  const baseUrl = (input?.baseUrl?.trim() || fallback.baseUrl).replace(/\/+$/, '');
 
   if (!apiKey) {
     throw new Error('FactChat API 키가 필요합니다.');
