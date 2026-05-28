@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TOOLS: { label: string; href: string }[] = [
+  { label: 'Seongnam AI', href: '/seongnam-ai' },
   { label: 'MBTI 검사기', href: '/mbti' },
   { label: '테토에겐 테스트', href: '/teto' },
   { label: '보도자료 생성기', href: '/press' },

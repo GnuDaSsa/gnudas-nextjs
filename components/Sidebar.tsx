@@ -7,6 +7,7 @@ import { useState } from 'react';
 const NAV_ITEMS = [
   { label: 'Tools', type: 'section' },
   { label: 'Home', href: '/' },
+  { label: 'Seongnam AI', href: '/seongnam-ai' },
   { label: 'MBTI 검사기', href: '/mbti' },
   { label: '테토에겐 테스트', href: '/teto' },
   { label: '보도자료 생성기', href: '/press' },
