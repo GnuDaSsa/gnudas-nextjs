@@ -3,28 +3,115 @@ import { factChatFetch, getFactChatConfig } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
 
+type ImageItem = {
+  url?: string;
+  b64_json?: string;
+  base64?: string;
+  image_url?: string;
+  imageUrl?: string;
+};
+
 type ImageGenerateResponse = {
-  data?: Array<{ url?: string }>;
+  data?: ImageItem[];
+  images?: ImageItem[];
+  image?: string;
+  image_url?: string;
+  imageUrl?: string;
+  url?: string;
+  b64_json?: string;
+  base64?: string;
+  output?: unknown;
   operation_id?: string;
   status?: string;
 };
+
+function asDataUrl(value: string) {
+  if (!value) return null;
+  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
+    return value;
+  }
+  return `data:image/png;base64,${value}`;
+}
+
+function extractImageUrl(data: ImageGenerateResponse): string | null {
+  const firstData = data.data?.[0];
+  const firstImage = data.images?.[0];
+  const candidates = [
+    firstData?.url,
+    firstData?.b64_json,
+    firstData?.base64,
+    firstData?.image_url,
+    firstData?.imageUrl,
+    firstImage?.url,
+    firstImage?.b64_json,
+    firstImage?.base64,
+    firstImage?.image_url,
+    firstImage?.imageUrl,
+    data.url,
+    data.image,
+    data.image_url,
+    data.imageUrl,
+    data.b64_json,
+    data.base64,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return asDataUrl(candidate.trim());
+    }
+  }
+
+  if (Array.isArray(data.output)) {
+    for (const item of data.output) {
+      if (typeof item === 'string' && item.trim()) return asDataUrl(item.trim());
+      if (item && typeof item === 'object') {
+        const outputItem = item as ImageItem;
+        const extracted =
+          outputItem.url ||
+          outputItem.b64_json ||
+          outputItem.base64 ||
+          outputItem.image_url ||
+          outputItem.imageUrl;
+        if (extracted) return asDataUrl(extracted);
+      }
+    }
+  }
+
+  return null;
+}
+
+function summarizeShape(data: ImageGenerateResponse) {
+  return Object.keys(data).sort().join(', ') || 'empty object';
+}
 
 export async function POST(req: NextRequest) {
   const { prompt, aspectRatio } = await req.json();
 
   try {
     const config = getFactChatConfig();
-    const data = (await factChatFetch('/images/generate/', {
-      method: 'POST',
-      body: JSON.stringify({
-        model: config.imageModel,
-        prompt,
-        aspect_ratio: aspectRatio || '1:1',
-        number_of_images: 1,
-      }),
-    })) as ImageGenerateResponse;
+    const payload = {
+      model: config.imageModel,
+      prompt,
+      aspect_ratio: aspectRatio || '1:1',
+      size: aspectRatio || '1:1',
+      number_of_images: 1,
+      n: 1,
+    };
 
-    const imageDataUrl = data.data?.[0]?.url || null;
+    let data: ImageGenerateResponse;
+    try {
+      data = (await factChatFetch('/images/generations/', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })) as ImageGenerateResponse;
+    } catch {
+      data = (await factChatFetch('/images/generate/', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })) as ImageGenerateResponse;
+    }
+
+    const imageDataUrl = extractImageUrl(data);
     if (imageDataUrl) {
       return NextResponse.json({ imageDataUrl });
     }
@@ -39,7 +126,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ imageDataUrl: null });
+    return NextResponse.json(
+      {
+        imageDataUrl: null,
+        error: `이미지 생성 응답에서 이미지 URL/base64를 찾지 못했습니다. 응답 필드: ${summarizeShape(data)}`,
+      },
+      { status: 502 },
+    );
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
