@@ -101,7 +101,20 @@ function summarizeShape(data: ImageGenerateResponse) {
   const topLevel = Object.keys(data).sort().join(', ') || 'empty object';
   const firstData = data.data?.[0];
   const firstDataKeys = firstData ? Object.keys(firstData).sort().join(', ') : '';
-  return firstDataKeys ? `${topLevel}; data[0]: ${firstDataKeys}` : topLevel;
+  const dataLength = Array.isArray(data.data) ? `; data.length=${data.data.length}` : '';
+  return firstDataKeys ? `${topLevel}${dataLength}; data[0]: ${firstDataKeys}` : `${topLevel}${dataLength}`;
+}
+
+function imageSizeForAspectRatio(aspectRatio?: string) {
+  switch (aspectRatio) {
+    case '9:16':
+      return '1024x1536';
+    case '16:9':
+      return '1536x1024';
+    case '1:1':
+    default:
+      return '1024x1024';
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -113,9 +126,11 @@ export async function POST(req: NextRequest) {
       model: config.imageModel,
       prompt,
       aspect_ratio: aspectRatio || '1:1',
-      size: aspectRatio || '1:1',
+      size: imageSizeForAspectRatio(aspectRatio),
       number_of_images: 1,
       n: 1,
+      response_format: 'b64_json',
+      output_format: 'png',
     };
 
     let data: ImageGenerateResponse;
