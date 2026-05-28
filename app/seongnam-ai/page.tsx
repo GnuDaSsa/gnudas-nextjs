@@ -13,7 +13,8 @@ type ChatMessage = {
   content: string;
 };
 
-const MODEL_STORAGE = 'seongnam-ai-client-model';
+const MODEL_STORAGE = 'seongnam-ai-client-model-v2';
+const PREFERRED_MODEL = 'gpt-5.5';
 const DEFAULT_BASE_URL = 'https://factchat-cloud.mindlogic.ai/v1/gateway';
 const DEFAULT_SYSTEM_PROMPT =
   'You are a helpful AI assistant for public-sector office work. Answer in Korean unless the user asks for another language. Be concise, accurate, and practical.';
@@ -68,7 +69,11 @@ export default function SeongnamAiPage() {
 
       const storedModel = window.localStorage.getItem(MODEL_STORAGE) || '';
       const modelExists = nextModels.some((model) => model.id === storedModel);
-      const nextModel = modelExists ? storedModel : nextModels[0]?.id ?? '';
+      const preferredModel = nextModels.find((model) => {
+        const modelId = model.id.toLowerCase();
+        return modelId === PREFERRED_MODEL || modelId.startsWith(`${PREFERRED_MODEL}-`);
+      })?.id;
+      const nextModel = modelExists ? storedModel : preferredModel ?? nextModels[0]?.id ?? '';
 
       setSelectedModel(nextModel);
       if (nextModel) window.localStorage.setItem(MODEL_STORAGE, nextModel);
@@ -161,7 +166,7 @@ export default function SeongnamAiPage() {
       <section className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroContent}>
-            <p className={styles.eyebrow}>Seongnam AI Gateway</p>
+            <p className={styles.eyebrow}>SN Gateway</p>
             <h1>
               <span>SN</span>
               <span>Service</span>
@@ -198,13 +203,13 @@ export default function SeongnamAiPage() {
           </div>
 
           <label className={styles.field}>
-            <span>Selected model</span>
+            <span>Selected</span>
             <select
               value={selectedModel}
               onChange={(event) => selectModel(event.target.value)}
               disabled={!models.length}
             >
-              {!models.length && <option value="">Loading models</option>}
+              {!models.length && <option value="">Loading</option>}
               {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.id}
@@ -221,7 +226,7 @@ export default function SeongnamAiPage() {
           <div className={styles.chatHeader}>
             <div>
               <span>Chat</span>
-              <strong>{selectedModel || 'Model loading'}</strong>
+              <strong>{selectedModel || 'Loading'}</strong>
             </div>
             <div className={styles.chatMeta}>
               <span>{messages.length}</span>
@@ -253,17 +258,17 @@ export default function SeongnamAiPage() {
           <form className={styles.composer} onSubmit={sendMessage}>
             <textarea
               value={input}
-              placeholder="Ask anything."
+              placeholder="Message"
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               rows={4}
             />
             <div className={styles.composerActions}>
               <button
-              className={styles.ghostButton}
-              type="button"
-              onClick={() => setMessages(messages.slice(0, 1))}
-            >
+                className={styles.ghostButton}
+                type="button"
+                onClick={() => setMessages(messages.slice(0, 1))}
+              >
                 Reset
               </button>
               <button className={styles.primaryButton} type="submit" disabled={isSending}>
