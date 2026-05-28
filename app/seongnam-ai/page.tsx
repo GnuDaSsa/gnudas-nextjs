@@ -28,13 +28,13 @@ async function readResponse(response: Response) {
 }
 
 export default function SeongnamAiPage() {
-  const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
+  const baseUrl = DEFAULT_BASE_URL;
   const [models, setModels] = useState<FactChatModel[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Connected to the Seongnam AI platform. Choose a model and start chatting.',
+      content: 'Ready.',
     },
   ]);
   const [input, setInput] = useState('');
@@ -166,10 +166,6 @@ export default function SeongnamAiPage() {
               <span>SN</span>
               <span>Service</span>
             </h1>
-            <p className={styles.heroCopy}>
-              A clean chat client powered by the server-side FactChat API key. No key input, no
-              setup flow. Pick a model and work.
-            </p>
           </div>
         </div>
 
@@ -196,9 +192,9 @@ export default function SeongnamAiPage() {
           <div className={styles.sectionHead}>
             <div>
               <span>Models</span>
-              <h2>Model picker</h2>
+              <h2>Model</h2>
             </div>
-            <small>{models.length ? `${models.length} available` : 'loading'}</small>
+            <small>{models.length || '-'}</small>
           </div>
 
           <label className={styles.field}>
@@ -216,29 +212,9 @@ export default function SeongnamAiPage() {
               ))}
             </select>
           </label>
-
-          <div className={styles.modelPills}>
-            {models.slice(0, 12).map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                className={model.id === selectedModel ? styles.active : ''}
-                onClick={() => selectModel(model.id)}
-              >
-                {model.id}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.connectionTools}>
-            <label className={styles.field}>
-              <span>Gateway URL</span>
-              <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
-            </label>
-            <button className={styles.ghostButton} type="button" onClick={connectAccount}>
-              Refresh models
-            </button>
-          </div>
+          <button className={styles.ghostButton} type="button" onClick={connectAccount}>
+            Refresh
+          </button>
         </article>
 
         <article className={styles.chatCard}>
@@ -248,8 +224,7 @@ export default function SeongnamAiPage() {
               <strong>{selectedModel || 'Model loading'}</strong>
             </div>
             <div className={styles.chatMeta}>
-              <span>{messages.length} messages</span>
-              <span>Ready</span>
+              <span>{messages.length}</span>
             </div>
           </div>
 
@@ -269,7 +244,7 @@ export default function SeongnamAiPage() {
                 <span>AI</span>
                 <div className={styles.loadingBubble}>
                   <i />
-                  <p>Generating response</p>
+                  <p>Generating</p>
                 </div>
               </div>
             )}
@@ -285,11 +260,11 @@ export default function SeongnamAiPage() {
             />
             <div className={styles.composerActions}>
               <button
-                className={styles.ghostButton}
-                type="button"
-                onClick={() => setMessages(messages.slice(0, 1))}
-              >
-                Reset chat
+              className={styles.ghostButton}
+              type="button"
+              onClick={() => setMessages(messages.slice(0, 1))}
+            >
+                Reset
               </button>
               <button className={styles.primaryButton} type="submit" disabled={isSending}>
                 Send
