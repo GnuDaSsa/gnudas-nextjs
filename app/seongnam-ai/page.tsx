@@ -246,7 +246,7 @@ export default function SeongnamAiPage() {
             </div>
             <div className={styles.chatMeta}>
               <span>{messages.length} messages</span>
-              <span>Enter to send</span>
+              <span>Ready</span>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ export default function SeongnamAiPage() {
           <form className={styles.composer} onSubmit={sendMessage}>
             <textarea
               value={input}
-              placeholder="Ask anything. Enter sends, Shift+Enter adds a new line."
+              placeholder="Ask anything."
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               rows={4}
