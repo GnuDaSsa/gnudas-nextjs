@@ -20,7 +20,7 @@ const LOCAL_FACTCHAT_ENV_PATH =
 
 const DEFAULT_BASE_URL = 'https://factchat-cloud.mindlogic.ai/v1/gateway';
 const DEFAULT_TEXT_MODEL = 'claude-sonnet-4-6';
-const DEFAULT_IMAGE_MODEL = 'gpt-image-1.5';
+const DEFAULT_IMAGE_MODEL = 'gpt-image-2';
 const DEFAULT_AUDIO_MODEL = 'gemini-2.5-flash';
 
 let cachedFileEnv: EnvMap | null = null;
