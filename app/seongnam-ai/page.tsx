@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './page.module.css';
 
 type FactChatModel = {
@@ -21,8 +21,6 @@ type Template = {
   tone: string;
 };
 
-const KEY_STORAGE = 'seongnam-ai-client-key';
-const BASE_URL_STORAGE = 'seongnam-ai-client-base-url';
 const MODEL_STORAGE = 'seongnam-ai-client-model';
 const DEFAULT_BASE_URL = 'https://factchat-cloud.mindlogic.ai/v1/gateway';
 
@@ -60,12 +58,6 @@ const templates: Template[] = [
   },
 ];
 
-function maskKey(key: string) {
-  if (!key) return '';
-  if (key.length <= 8) return '*'.repeat(key.length);
-  return `${key.slice(0, 4)}${'*'.repeat(Math.max(8, key.length - 8))}${key.slice(-4)}`;
-}
-
 async function readResponse(response: Response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -76,7 +68,6 @@ async function readResponse(response: Response) {
 }
 
 export default function SeongnamAiPage() {
-  const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
   const [models, setModels] = useState<FactChatModel[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
@@ -85,7 +76,7 @@ export default function SeongnamAiPage() {
     {
       role: 'assistant',
       content:
-        '성남시 AI API 키를 등록하면 모델 목록과 크레딧을 확인하고 바로 대화를 시작할 수 있습니다.',
+        '성남시 AI 플랫폼에 자동 연결합니다. 모델 목록이 뜨면 바로 대화를 시작할 수 있습니다.',
     },
   ]);
   const [input, setInput] = useState('');
@@ -94,16 +85,6 @@ export default function SeongnamAiPage() {
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [notice, setNotice] = useState('');
-
-  useEffect(() => {
-    const savedKey = window.localStorage.getItem(KEY_STORAGE) ?? '';
-    const savedBaseUrl = window.localStorage.getItem(BASE_URL_STORAGE) ?? DEFAULT_BASE_URL;
-    const savedModel = window.localStorage.getItem(MODEL_STORAGE) ?? '';
-
-    setApiKey(savedKey);
-    setBaseUrl(savedBaseUrl);
-    setSelectedModel(savedModel);
-  }, []);
 
   const canUseApi = baseUrl.trim().length > 0;
 
@@ -115,7 +96,24 @@ export default function SeongnamAiPage() {
       .slice(0, 4);
   }, [credits]);
 
-  async function connectAccount() {
+  const loadCredits = useCallback(async (nextBaseUrl = baseUrl.trim()) => {
+    if (!nextBaseUrl) return;
+
+    try {
+      const data = await readResponse(
+        await fetch('/api/factchat/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseUrl: nextBaseUrl }),
+        }),
+      );
+      setCredits(data);
+    } catch {
+      setCredits(null);
+    }
+  }, [baseUrl]);
+
+  const connectAccount = useCallback(async () => {
     if (!canUseApi) {
       setNotice('Base URL을 입력하세요.');
       return;
@@ -129,7 +127,7 @@ export default function SeongnamAiPage() {
         await fetch('/api/factchat/models', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey: apiKey.trim(), baseUrl: baseUrl.trim() }),
+          body: JSON.stringify({ baseUrl: baseUrl.trim() }),
         }),
       );
 
@@ -141,47 +139,25 @@ export default function SeongnamAiPage() {
       const nextModel = modelExists ? storedModel : nextModels[0]?.id ?? '';
       setSelectedModel(nextModel);
 
-      if (apiKey.trim()) window.localStorage.setItem(KEY_STORAGE, apiKey.trim());
-      window.localStorage.setItem(BASE_URL_STORAGE, baseUrl.trim());
       if (nextModel) window.localStorage.setItem(MODEL_STORAGE, nextModel);
 
       setIsConnected(true);
       setNotice(`연결 완료: ${nextModels.length}개 모델을 사용할 수 있습니다.`);
 
-      void loadCredits(apiKey.trim(), baseUrl.trim());
+      void loadCredits(baseUrl.trim());
     } catch (error) {
       setIsConnected(false);
       setNotice(error instanceof Error ? error.message : '연결에 실패했습니다.');
     } finally {
       setIsLoadingModels(false);
     }
-  }
+  }, [baseUrl, canUseApi, loadCredits, selectedModel]);
 
-  async function loadCredits(nextKey = apiKey.trim(), nextBaseUrl = baseUrl.trim()) {
-    if (!nextBaseUrl) return;
-
-    try {
-      const data = await readResponse(
-        await fetch('/api/factchat/credits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey: nextKey, baseUrl: nextBaseUrl }),
-        }),
-      );
-      setCredits(data);
-    } catch {
-      setCredits(null);
-    }
-  }
-
-  function forgetKey() {
-    window.localStorage.removeItem(KEY_STORAGE);
-    setApiKey('');
-    setIsConnected(false);
-    setModels([]);
-    setCredits(null);
-    setNotice('저장된 API 키를 삭제했습니다.');
-  }
+  useEffect(() => {
+    const savedModel = window.localStorage.getItem(MODEL_STORAGE) ?? '';
+    setSelectedModel(savedModel);
+    void connectAccount();
+  }, [connectAccount]);
 
   function selectModel(modelId: string) {
     setSelectedModel(modelId);
@@ -211,7 +187,6 @@ export default function SeongnamAiPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            apiKey: apiKey.trim(),
             baseUrl: baseUrl.trim(),
             model: selectedModel,
             systemPrompt: activeTemplate.prompt,
@@ -251,16 +226,13 @@ export default function SeongnamAiPage() {
         <div className={styles.heroMain}>
           <div className={styles.heroContent}>
             <p className={styles.eyebrow}>Seongnam AI Gateway</p>
-            <h1>내 API 키로 쓰는 모바일 AI 업무비서</h1>
+            <h1>성남시 AI 플랫폼으로 연결된 모바일 업무비서</h1>
             <p className={styles.heroCopy}>
-              성남시 AI API 키를 등록하고, 본인 크레딧으로 32개 이상 AI 모델을 호출하는
-              BYOK 방식의 내부용 AI 클라이언트입니다. 키는 브라우저에 저장되며 요청은
-              서버 라우트를 통해 중계됩니다.
+              서버에 등록된 성남시 AI API 키로 여러 AI 모델을 호출하는 내부용 AI
+              클라이언트입니다. 사용자는 별도 키 입력 없이 모델을 선택하고 바로 업무에
+              활용할 수 있습니다.
             </p>
             <div className={styles.heroActions}>
-              <button className={styles.primaryButton} type="button" onClick={connectAccount}>
-                {isLoadingModels ? '연결 중' : 'API 연결'}
-              </button>
               <button className={styles.ghostButton} type="button" onClick={() => loadCredits()}>
                 크레딧 조회
               </button>
@@ -290,21 +262,11 @@ export default function SeongnamAiPage() {
         <article className={styles.card}>
           <div className={styles.sectionHead}>
             <div>
-              <span>01 Vault</span>
-              <h2>개인 API 키 등록</h2>
+              <span>01 Gateway</span>
+              <h2>자동 연결 상태</h2>
             </div>
-            <small>{apiKey ? maskKey(apiKey) : '서버 기본 키'}</small>
+            <small>{isLoadingModels ? '연결 중' : isConnected ? '연결됨' : '대기'}</small>
           </div>
-
-          <label className={styles.field}>
-            <span>FactChat API Key</span>
-            <input
-              type="password"
-              value={apiKey}
-              placeholder="비워두면 서버 FACTCHAT_API_KEY 사용"
-              onChange={(event) => setApiKey(event.target.value)}
-            />
-          </label>
 
           <label className={styles.field}>
             <span>Base URL</span>
@@ -313,10 +275,7 @@ export default function SeongnamAiPage() {
 
           <div className={styles.buttonRow}>
             <button className={styles.primaryButton} type="button" onClick={connectAccount}>
-              모델 불러오기
-            </button>
-            <button className={styles.textButton} type="button" onClick={forgetKey}>
-              키 삭제
+              다시 연결
             </button>
           </div>
         </article>
