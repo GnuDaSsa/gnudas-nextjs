@@ -162,7 +162,10 @@ export default function SeongnamAiPage() {
         <div className={styles.heroMain}>
           <div className={styles.heroContent}>
             <p className={styles.eyebrow}>Seongnam AI Gateway</p>
-            <h1>AI workspace connected to the Seongnam platform</h1>
+            <h1>
+              <span>SN</span>
+              <span>Service</span>
+            </h1>
             <p className={styles.heroCopy}>
               A clean chat client powered by the server-side FactChat API key. No key input, no
               setup flow. Pick a model and work.
