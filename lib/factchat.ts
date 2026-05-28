@@ -57,7 +57,18 @@ function readLocalFactChatEnv(): EnvMap {
 }
 
 function readValue(key: string, fallback = '') {
-  return process.env[key] || readLocalFactChatEnv()[key] || fallback;
+  const directValue = process.env[key];
+  if (directValue) return directValue;
+
+  const normalizedProcessKey = Object.keys(process.env).find(
+    (candidate) => candidate.replace(/^\uFEFF/, '') === key,
+  );
+  if (normalizedProcessKey) {
+    return process.env[normalizedProcessKey] || fallback;
+  }
+
+  const fileEnv = readLocalFactChatEnv();
+  return fileEnv[key] || fallback;
 }
 
 export function getFactChatConfig(): FactChatConfig {
