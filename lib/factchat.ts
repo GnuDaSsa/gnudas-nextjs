@@ -157,6 +157,56 @@ export async function factChatText({
   return data.choices?.[0]?.message?.content || data.output_text || '';
 }
 
+function extractJsonObject(text: string) {
+  const withoutFence = text
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  if (withoutFence.startsWith('{') || withoutFence.startsWith('[')) {
+    return withoutFence;
+  }
+
+  const start = withoutFence.search(/[\[{]/);
+  if (start < 0) return withoutFence;
+
+  const opener = withoutFence[start];
+  const closer = opener === '{' ? '}' : ']';
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < withoutFence.length; index += 1) {
+    const char = withoutFence[index];
+
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) continue;
+
+    if (char === opener) depth += 1;
+    if (char === closer) depth -= 1;
+
+    if (depth === 0) {
+      return withoutFence.slice(start, index + 1);
+    }
+  }
+
+  return withoutFence.slice(start);
+}
+
 export async function factChatJson<T>({
   messages,
   model,
@@ -167,8 +217,16 @@ export async function factChatJson<T>({
   maxTokens?: number;
 }) {
   const text = await factChatText({ messages, model, maxTokens });
-  const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
-  return JSON.parse(cleaned) as T;
+  const cleaned = extractJsonObject(text);
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? `FactChat JSON 파싱 실패: ${error.message}`
+        : 'FactChat JSON 파싱 실패',
+    );
+  }
 }
 
 export function dataUrlToBase64(dataUrl: string) {
