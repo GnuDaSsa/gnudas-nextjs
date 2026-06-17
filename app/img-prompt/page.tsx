@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { ToolShell, toolShellStyles as styles } from '@/components/tools/ToolShell';
+import localStyles from './page.module.css';
 
 const STYLES = [
   '사실적 (Photorealistic)',
@@ -27,6 +28,10 @@ const RATIOS = [
   { label: '롱폼용 (16:9)', value: '16:9' },
   { label: '정방형 (1:1)', value: '1:1' },
 ];
+
+function downloadFileName(aspectRatio: string) {
+  return `generated-image-${aspectRatio.replace(':', 'x')}.png`;
+}
 
 export default function ImgPromptPage() {
   const [input, setInput] = useState('');
@@ -206,6 +211,32 @@ export default function ImgPromptPage() {
             </p>
           </section>
 
+          {loadingImage ? (
+            <section className={styles.surface} aria-live="polite">
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>이미지 생성 중</h2>
+                  <p className={styles.sectionDescription}>GPT Image 2가 프롬프트를 처리하고 있습니다.</p>
+                </div>
+              </div>
+
+              <div className={localStyles.loadingPanel}>
+                <div className={localStyles.loaderMark} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className={localStyles.loadingCopy}>
+                  <strong>이미지를 만들고 있습니다</strong>
+                  <p>완료되면 아래 결과 영역에 축소 미리보기와 다운로드 버튼이 표시됩니다.</p>
+                </div>
+                <div className={localStyles.loadingTrack} aria-hidden="true">
+                  <div className={localStyles.loadingBar} />
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           {imageDataUrl ? (
             <section className={styles.surface}>
               <div className={styles.sectionHeader}>
@@ -214,12 +245,22 @@ export default function ImgPromptPage() {
                   <p className={styles.sectionDescription}>프롬프트와 비율이 실제로 어떻게 반영됐는지 확인합니다.</p>
                 </div>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageDataUrl}
-                alt="생성된 이미지"
-                style={{ width: '100%', borderRadius: 24, border: '1px solid rgba(88, 112, 145, 0.14)' }}
-              />
+              <div className={localStyles.imageResult}>
+                <div className={localStyles.imageFrame}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className={localStyles.generatedImage} src={imageDataUrl} alt="생성된 이미지" />
+                </div>
+
+                <div className={styles.actions}>
+                  <a
+                    className={`${styles.buttonPrimary} ${localStyles.downloadButton}`}
+                    href={imageDataUrl}
+                    download={downloadFileName(ratio)}
+                  >
+                    이미지 다운로드
+                  </a>
+                </div>
+              </div>
             </section>
           ) : null}
 
