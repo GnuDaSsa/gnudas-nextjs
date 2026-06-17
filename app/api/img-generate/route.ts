@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { factChatFetch, getFactChatConfig } from '@/lib/factchat';
+import { factChatFetch } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
+
+const REQUIRED_IMAGE_MODEL = 'gpt-image-2';
 
 type ImageItem = {
   url?: string;
@@ -121,10 +123,13 @@ export async function POST(req: NextRequest) {
   const { prompt, aspectRatio } = await req.json();
 
   try {
-    const config = getFactChatConfig();
+    if (typeof prompt !== 'string' || !prompt.trim()) {
+      return NextResponse.json({ error: '이미지 생성 프롬프트가 필요합니다.' }, { status: 400 });
+    }
+
     const payload = {
-      model: config.imageModel,
-      prompt,
+      model: REQUIRED_IMAGE_MODEL,
+      prompt: prompt.trim(),
       aspect_ratio: aspectRatio || '1:1',
       size: imageSizeForAspectRatio(aspectRatio),
       number_of_images: 1,
@@ -133,22 +138,14 @@ export async function POST(req: NextRequest) {
       output_format: 'png',
     };
 
-    let data: ImageGenerateResponse;
-    try {
-      data = (await factChatFetch('/images/generations/', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })) as ImageGenerateResponse;
-    } catch {
-      data = (await factChatFetch('/images/generate/', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })) as ImageGenerateResponse;
-    }
+    const data = (await factChatFetch('/images/generate/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })) as ImageGenerateResponse;
 
     const imageDataUrl = extractImageUrl(data);
     if (imageDataUrl) {
-      return NextResponse.json({ imageDataUrl });
+      return NextResponse.json({ imageDataUrl, model: REQUIRED_IMAGE_MODEL });
     }
 
     if (data.operation_id) {
