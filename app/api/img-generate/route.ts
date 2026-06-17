@@ -130,12 +130,8 @@ export async function POST(req: NextRequest) {
     const payload = {
       model: REQUIRED_IMAGE_MODEL,
       prompt: prompt.trim(),
-      aspect_ratio: aspectRatio || '1:1',
       size: imageSizeForAspectRatio(aspectRatio),
-      number_of_images: 1,
       n: 1,
-      response_format: 'b64_json',
-      output_format: 'png',
     };
 
     const data = (await factChatFetch('/images/generate/', {
