@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { label: 'Tools', type: 'section' },
   { label: 'Home', href: '/' },
   { label: 'Seongnam AI', href: '/seongnam-ai' },
+  { label: '일반현황 모바일 책갈피', href: '/general-status-bookmark' },
   { label: 'MBTI 검사기', href: '/mbti' },
   { label: '테토에겐 테스트', href: '/teto' },
   { label: '보도자료 생성기', href: '/press' },

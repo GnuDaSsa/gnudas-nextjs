@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const TOOLS: { label: string; href: string }[] = [
   { label: 'Seongnam AI', href: '/seongnam-ai' },
+  { label: '일반현황 모바일 책갈피', href: '/general-status-bookmark' },
   { label: 'MBTI 검사기', href: '/mbti' },
   { label: '테토에겐 테스트', href: '/teto' },
   { label: '보도자료 생성기', href: '/press' },
@@ -30,15 +31,6 @@ const ACTIVE_ACTIVITIES = [
   '이번 분기 목표: 나만의 AI 콘텐츠 만들기',
 ];
 
-type LocalWork = {
-  branch: string;
-  changedCount: number;
-  changedFiles: string[];
-  lastCommit: string;
-  codingProcesses: string[];
-  updatedAt: string;
-  agentPipeline: { name: string; state: string; detail: string }[];
-};
 
 function isCodingProcess(line: string) {
   const v = line.toLowerCase();
@@ -48,7 +40,6 @@ function isCodingProcess(line: string) {
 export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const [hoveredTool, setHoveredTool] = useState<number | null>(null);
-  const [localWork, setLocalWork] = useState<LocalWork | null>(null);
   const [showCodingPopup, setShowCodingPopup] = useState(false);
   const wasCodingRef = useRef(false);
   const router = useRouter();
@@ -71,7 +62,6 @@ export default function HomePage() {
             setShowCodingPopup(true);
           }
           wasCodingRef.current = codingNow;
-          setLocalWork(data);
         }
       } catch {
         // ignore
