@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dataUrlToBase64, factChatText, getFactChatConfig } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 function inferAudioFormat(file: File) {
   const fromType = file.type.split('/')[1]?.split(';')[0];

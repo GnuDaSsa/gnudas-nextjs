@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { factChatText } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   novel: `당신은 한국의 탁월한 소설 작가 에이전트입니다. 사용자의 소설 창작을 전문적으로 돕습니다.

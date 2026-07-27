@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { factChatText } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+
+function field(body: Record<string, unknown>, keys: string[], fallbackIndex?: number) {
+  for (const key of keys) {
+    const value = body[key];
+    if (value !== undefined && value !== null) return String(value).trim();
+  }
+
+  return typeof fallbackIndex === 'number' ? valueAt(body, fallbackIndex) : '';
+}
 
 function valueAt(body: Record<string, unknown>, index: number) {
   return String(Object.values(body)[index] ?? '').trim();
@@ -10,11 +21,12 @@ function valueAt(body: Record<string, unknown>, index: number) {
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as Record<string, unknown>;
 
-  const department = String(body.department ?? body.dept ?? valueAt(body, 0));
-  const spokesperson = String(body.spokesperson ?? valueAt(body, 1) ?? '관계자') || '관계자';
-  const date = String(body.date ?? valueAt(body, 2));
-  const contact = String(body.contact ?? valueAt(body, 3));
-  const content = String(body.content ?? body.body ?? valueAt(body, 4));
+  const department = field(body, ['department', 'dept', '담당부서'], 0);
+  const spokesperson =
+    field(body, ['spokesperson', 'speaker', '소감주체', '발언주체', '담당자'], 1) || '관계자';
+  const date = field(body, ['date', '해당일', '날짜'], 2);
+  const contact = field(body, ['contact', '연락처'], 3);
+  const content = field(body, ['content', 'body', '내용', '핵심내용'], 4);
 
   try {
     const text = await factChatText({

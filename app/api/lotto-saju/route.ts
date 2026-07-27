@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { factChatJson } from '@/lib/factchat';
 import { buildLottoSaju } from '@/lib/lotto-saju';
-
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 type LottoSajuResult = Awaited<ReturnType<typeof buildLottoSaju>>;
 

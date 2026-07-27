@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { factChatFetch } from '@/lib/factchat';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const REQUIRED_IMAGE_MODEL = 'gpt-image-2';
 

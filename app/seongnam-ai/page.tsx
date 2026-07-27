@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useCallback, useRef, useState } from 'react';
 import styles from './page.module.css';
 
 type FactChatModel = {
@@ -14,8 +14,13 @@ type ChatMessage = {
 };
 
 const MODEL_STORAGE = 'seongnam-ai-client-model-v2';
-const PREFERRED_MODEL = 'gpt-5.5';
-const DEFAULT_BASE_URL = 'https://factchat-cloud.mindlogic.ai/v1/gateway';
+const PREFERRED_MODEL = 'HCX-003';
+const CLOVA_MODELS: FactChatModel[] = [
+  { id: 'HCX-003', owned_by: 'clova' },
+  { id: 'HCX-DASH-001', owned_by: 'clova' },
+  { id: 'HCX-005', owned_by: 'clova' },
+  { id: 'HCX-DASH-002', owned_by: 'clova' },
+];
 const DEFAULT_SYSTEM_PROMPT =
   'You are a helpful AI assistant for public-sector office work. Answer in Korean unless the user asks for another language. Be concise, accurate, and practical.';
 
@@ -29,70 +34,18 @@ async function readResponse(response: Response) {
 }
 
 export default function SeongnamAiPage() {
-  const baseUrl = DEFAULT_BASE_URL;
-  const [models, setModels] = useState<FactChatModel[]>([]);
+  const [models] = useState<FactChatModel[]>(CLOVA_MODELS);
   const [selectedModel, setSelectedModel] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: '성남AI 게이트웨이에 연결할게요. 모델을 불러온 뒤 바로 질문할 수 있습니다.',
+      content: '성남AI(CLOVA)에 연결되었습니다. 모델을 선택하고 질문하세요.',
     },
   ]);
   const [input, setInput] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [isConnected] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [notice, setNotice] = useState('');
-  const didAutoConnect = useRef(false);
-
-  const connectAccount = useCallback(async () => {
-    const nextBaseUrl = baseUrl.trim();
-    if (!nextBaseUrl) {
-      setNotice('Base URL is required.');
-      return;
-    }
-
-    setIsLoadingModels(true);
-    setNotice('');
-
-    try {
-      const modelData = await readResponse(
-        await fetch('/api/factchat/models', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ baseUrl: nextBaseUrl }),
-        }),
-      );
-
-      const nextModels = (modelData.data ?? []) as FactChatModel[];
-      setModels(nextModels);
-
-      const storedModel = window.localStorage.getItem(MODEL_STORAGE) || '';
-      const modelExists = nextModels.some((model) => model.id === storedModel);
-      const preferredModel = nextModels.find((model) => {
-        const modelId = model.id.toLowerCase();
-        return modelId === PREFERRED_MODEL || modelId.startsWith(`${PREFERRED_MODEL}-`);
-      })?.id;
-      const nextModel = modelExists ? storedModel : preferredModel ?? nextModels[0]?.id ?? '';
-
-      setSelectedModel(nextModel);
-      if (nextModel) window.localStorage.setItem(MODEL_STORAGE, nextModel);
-
-      setIsConnected(true);
-      setNotice('');
-    } catch (error) {
-      setIsConnected(false);
-      setNotice(error instanceof Error ? error.message : 'Connection failed.');
-    } finally {
-      setIsLoadingModels(false);
-    }
-  }, [baseUrl]);
-
-  useEffect(() => {
-    if (didAutoConnect.current) return;
-    didAutoConnect.current = true;
-    void connectAccount();
-  }, [connectAccount]);
 
   function selectModel(modelId: string) {
     setSelectedModel(modelId);
@@ -118,11 +71,10 @@ export default function SeongnamAiPage() {
 
     try {
       const data = await readResponse(
-        await fetch('/api/factchat/chat', {
+        await fetch('/api/seongnam-ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            baseUrl: baseUrl.trim(),
             model: selectedModel,
             systemPrompt: DEFAULT_SYSTEM_PROMPT,
             messages: nextMessages.map((message) => ({
@@ -161,7 +113,6 @@ export default function SeongnamAiPage() {
     void sendMessage();
   }
 
-  const statusLabel = notice ? 'Setup needed' : isLoadingModels ? 'Connecting' : isConnected ? 'Online' : 'Ready';
   const modelLabel = selectedModel || 'No model selected';
 
   return (
@@ -173,25 +124,25 @@ export default function SeongnamAiPage() {
 
         <aside className={styles.statusPanel} aria-label="성남AI 연결 상태">
           <div className={styles.statusTopline}>
-            <span className={`${styles.statusDot} ${isConnected ? styles.online : ''}`} />
-            <span>{statusLabel}</span>
+            <span className={`${styles.statusDot} ${styles.online}`} />
+            <span>Online</span>
           </div>
           <div>
             <div className={styles.statusModel}>{modelLabel}</div>
             <p className={styles.statusHint}>
               {selectedModel
-                ? '선택한 모델로 보고자료, 민원 문장, 내부 검토 초안을 바로 정리합니다.'
-                : 'FactChat 모델을 불러오면 이 영역에서 현재 라우팅 상태를 확인할 수 있습니다.'}
+                ? '선택한 CLOVA 모델로 보고자료, 민원 문장, 내부 검토 초안을 바로 정리합니다.'
+                : 'CLOVA 모델을 선택하면 바로 대화할 수 있습니다.'}
             </p>
           </div>
           <div className={styles.statusGrid}>
             <div>
               <span>Models</span>
-              <strong>{models.length || '-'}</strong>
+              <strong>{models.length}</strong>
             </div>
             <div>
               <span>Endpoint</span>
-              <strong>FactChat</strong>
+              <strong>CLOVA Studio</strong>
             </div>
           </div>
         </aside>
@@ -206,7 +157,7 @@ export default function SeongnamAiPage() {
               <span>Model routing</span>
               <h2>응답 모델</h2>
             </div>
-            <small>{models.length || '-'}</small>
+            <small>{models.length}</small>
           </div>
 
           <label className={styles.field}>
@@ -214,11 +165,7 @@ export default function SeongnamAiPage() {
             <select
               value={selectedModel}
               onChange={(event) => selectModel(event.target.value)}
-              disabled={!models.length}
             >
-              {!models.length && (
-                <option value="">{isLoadingModels ? 'Loading models' : 'No models available'}</option>
-              )}
               {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.id}
@@ -228,7 +175,7 @@ export default function SeongnamAiPage() {
           </label>
 
           <div className={styles.modelList}>
-            {models.slice(0, 5).map((model) => (
+            {models.map((model) => (
               <button
                 key={model.id}
                 type="button"
@@ -238,13 +185,6 @@ export default function SeongnamAiPage() {
                 {model.id}
               </button>
             ))}
-            {!models.length && (
-              <p>
-                {isLoadingModels
-                  ? 'FactChat에서 모델 목록을 불러오는 중입니다.'
-                  : '모델을 불러오지 못했습니다. API 키와 연결 상태를 확인하세요.'}
-              </p>
-            )}
           </div>
 
           <div className={styles.helperCard}>
@@ -257,7 +197,7 @@ export default function SeongnamAiPage() {
           <div className={styles.chatHeader}>
             <div>
               <span>Conversation</span>
-              <strong>{selectedModel || '모델 연결 대기'}</strong>
+              <strong>{selectedModel || '모델 선택 대기'}</strong>
             </div>
             <div className={styles.chatMeta}>
               <span>{messages.length} messages</span>

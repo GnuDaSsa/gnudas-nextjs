@@ -1,5 +1,7 @@
 import { apiError, parseConfig, proxyJson } from '../_utils';
 
+export const maxDuration = 60;
+
 type ClientMessage = {
   role: 'user' | 'assistant';
   content: string;

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getFactChatConfig } from '@/lib/factchat';
+const FACTCHAT_TIMEOUT_MS = 45_000;
+const FACTCHAT_MAX_ATTEMPTS = 2;
+
 
 export type FactChatConfig = {
   apiKey: string;
@@ -23,16 +26,63 @@ export function parseConfig(body: unknown): FactChatConfig {
   return { apiKey, baseUrl };
 }
 
+function isRetryableStatus(status: number) {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+function createTimeoutSignal(timeoutMs: number, upstreamSignal?: AbortSignal | null) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (upstreamSignal) {
+    if (upstreamSignal.aborted) {
+      controller.abort();
+    } else {
+      upstreamSignal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
+  }
+
+  return { signal: controller.signal, clear: () => clearTimeout(timeoutId) };
+}
+
 export async function proxyJson(url: string, apiKey: string, init: RequestInit = {}) {
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      ...(init.headers ?? {}),
-    },
-    cache: 'no-store',
-  });
+  let response: Response | null = null;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= FACTCHAT_MAX_ATTEMPTS; attempt += 1) {
+    const timeout = createTimeoutSignal(FACTCHAT_TIMEOUT_MS, init.signal);
+
+    try {
+      response = await fetch(url, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          ...(init.headers ?? {}),
+        },
+        cache: 'no-store',
+        signal: timeout.signal,
+      });
+
+      if (attempt < FACTCHAT_MAX_ATTEMPTS && isRetryableStatus(response.status)) {
+        lastError = new Error(`FactChat 요청 실패 (${response.status})`);
+        continue;
+      }
+
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= FACTCHAT_MAX_ATTEMPTS) break;
+    } finally {
+      timeout.clear();
+    }
+  }
+
+  if (!response) {
+    throw lastError instanceof Error
+      ? new Error(`FactChat 요청 실패: ${lastError.message}`)
+      : new Error('FactChat 요청에 실패했습니다.');
+  }
 
   const text = await response.text();
   let data: unknown = {};

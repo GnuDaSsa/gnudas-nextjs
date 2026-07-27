@@ -13,9 +13,6 @@ export type FactChatConfig = {
   audioModel: string;
 };
 
-const LOCAL_CLOVA_ENV_PATH =
-  'C:\\Users\\Owner\\Desktop\\사진우\\AI\\clova api.env';
-
 const CLOVA_BASE_URL = 'https://clovastudio.stream.ntruss.com';
 const DEFAULT_TEXT_MODEL = 'HCX-003';
 const DEFAULT_VISION_MODEL = 'HCX-005';
@@ -25,6 +22,9 @@ const CLOVA_TIMEOUT_MS = 60_000;
 const CLOVA_MAX_ATTEMPTS = 2;
 
 let cachedFileEnv: Record<string, string> | null = null;
+
+const LOCAL_CLOVA_ENV_PATH =
+  'C:\\Users\\Owner\\Desktop\\사진우\\AI\\clova api.env';
 
 function parseEnvText(text: string): Record<string, string> {
   const env: Record<string, string> = {};
@@ -214,6 +214,7 @@ export async function factChatText({
   }, targetModel)) as {
     result?: {
       message?: { content?: string };
+      usage?: { completionTokens?: number; promptTokens?: number; totalTokens?: number };
     };
     status?: { code?: string; message?: string };
   };
